@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Trash2, 
   AlertTriangle, 
@@ -40,6 +40,17 @@ export const ClearDataModal: React.FC<ClearDataModalProps> = ({
   const [confirmStep, setConfirmStep] = useState(false);
   const [typedConfirm, setTypedConfirm] = useState('');
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Reset internal state every time the modal is (re)opened, so it never
+  // opens "stuck" on the confirmation step from a previous use.
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedMode(defaultMode);
+      setConfirmStep(false);
+      setTypedConfirm('');
+      setNotification(null);
+    }
+  }, [isOpen, defaultMode]);
 
   if (!isOpen) return null;
 

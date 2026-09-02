@@ -106,13 +106,6 @@ export const PrintSalesHistoryModal: React.FC<PrintSalesHistoryModalProps> = ({
               <Download className="w-3.5 h-3.5" />
               <span>Descargar CSV</span>
             </button>
-            <button
-              onClick={handlePrint}
-              className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
-            >
-              <Printer className="w-4 h-4" />
-              <span>Imprimir Ahora</span>
-            </button>
           </div>
         </div>
 

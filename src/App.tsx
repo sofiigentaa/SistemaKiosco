@@ -34,6 +34,7 @@ const KioskAppContent: React.FC = () => {
       <Header 
         onOpenCashModal={() => setShowCashModal(true)} 
         onOpenSyncModal={() => setShowSyncModal(true)}
+        onOpenClearModal={() => setShowClearModal(true)}
       />
 
       {/* Main View Router */}

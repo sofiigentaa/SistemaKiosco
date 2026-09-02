@@ -24,6 +24,8 @@ import { Product, ProductCategory } from '../../types';
 import { formatCurrency, formatPercent, formatDate, getDaysUntil } from '../../utils/formatters';
 import { PrintInventoryModal } from './PrintInventoryModal';
 import { LiquidationModal } from './LiquidationModal';
+import { ClearDataModal } from '../Common/ClearDataModal';
+
 export const InventoryScreen: React.FC = () => {
   const { 
     products, 
@@ -62,6 +64,7 @@ export const InventoryScreen: React.FC = () => {
   const [restockSale, setRestockSale] = useState<number | ''>('');
 
   const [showBulkPriceModal, setShowBulkPriceModal] = useState(false);
+  const [showClearDataModal, setShowClearDataModal] = useState(false);
   const [bulkCategory, setBulkCategory] = useState<string>('ALL');
   const [bulkPercent, setBulkPercent] = useState<number | ''>(10);
 
@@ -79,7 +82,7 @@ export const InventoryScreen: React.FC = () => {
           newSalePrice = p.costPrice;
         }
       }
-      updateProduct(id, { salePrice: newSalePrice, liquidationApplied: true });
+      updateProduct(id, { salePrice: newSalePrice });
       count++;
     });
 
@@ -130,7 +133,7 @@ export const InventoryScreen: React.FC = () => {
     setEditingProduct(null);
     setProductFormError(null);
     setFormData({
-      barcode: '779' + Math.floor(1000000000 + Math.random() * 9000000000),
+      barcode: '',
       name: '',
       category: categories[0] || 'Golosinas & Chocolates',
       costPrice: 500,
@@ -403,12 +406,22 @@ export const InventoryScreen: React.FC = () => {
           </button>
 
           <button
+            id="inv-clear-data-btn"
+            onClick={() => setShowClearDataModal(true)}
+            className="px-2.5 py-1.5 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 text-xs font-semibold transition-all border border-rose-200 flex items-center gap-1 cursor-pointer"
+            title="Borrar catálogo o vaciar stock a 0"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+            <span>Borrar Datos</span>
+          </button>
+
+          <button
             id="inv-new-product-btn"
             onClick={handleOpenAddModal}
             className="px-3 py-1.5 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Nuevo Producto</span>
+            <span>NUEVO PRODUCTO</span>
           </button>
         </div>
       </div>
@@ -707,7 +720,7 @@ export const InventoryScreen: React.FC = () => {
                     type="text"
                     value={formData.barcode}
                     onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                    placeholder="779000000"
+                    placeholder="Ej: 7791234567890 (dejalo vacío para autogenerar)"
                     className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:bg-white focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
@@ -1309,6 +1322,13 @@ export const InventoryScreen: React.FC = () => {
           onClose={() => setShowLiquidationModal(false)}
         />
       )}
+
+      {/* Clear Data Modal */}
+      <ClearDataModal
+        isOpen={showClearDataModal}
+        onClose={() => setShowClearDataModal(false)}
+        defaultMode="PRODUCTS"
+      />
 
     </div>
   );

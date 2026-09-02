@@ -41,18 +41,6 @@ export const ClearDataModal: React.FC<ClearDataModalProps> = ({
   const [typedConfirm, setTypedConfirm] = useState('');
   const [notification, setNotification] = useState<string | null>(null);
 
-  // Reset internal state every time the modal is (re)opened, so it never
-  // reopens stuck on the confirmation screen from a previous run.
-  React.useEffect(() => {
-    if (isOpen) {
-      setSelectedMode(defaultMode);
-      setConfirmStep(false);
-      setTypedConfirm('');
-      setNotification(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   const handleSelectMode = (mode: ClearMode) => {
@@ -81,7 +69,6 @@ export const ClearDataModal: React.FC<ClearDataModalProps> = ({
 
     setTimeout(() => {
       setNotification(null);
-      setConfirmStep(false);
       onClose();
     }, 1200);
   };
@@ -289,18 +276,26 @@ export const ClearDataModal: React.FC<ClearDataModalProps> = ({
             ) : (
               /* CONFIRMATION STEP */
               <div className="space-y-4 py-2 animate-in fade-in duration-150">
-                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-lg flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                <div className={`p-3.5 border rounded-lg flex items-start gap-3 ${
+                  selectedMode === 'DEMO'
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : 'bg-rose-50 border-rose-200'
+                }`}>
+                  {selectedMode === 'DEMO' ? (
+                    <RotateCcw className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  )}
                   <div>
-                    <h4 className="text-xs font-bold text-rose-900">
-                      ¿Confirmar borrado de datos?
+                    <h4 className={`text-xs font-bold ${selectedMode === 'DEMO' ? 'text-emerald-900' : 'text-rose-900'}`}>
+                      {selectedMode === 'DEMO' ? '¿Confirmar carga de datos de muestra?' : '¿Confirmar borrado de datos?'}
                     </h4>
-                    <p className="text-xs text-rose-700 mt-0.5">
+                    <p className={`text-xs mt-0.5 ${selectedMode === 'DEMO' ? 'text-emerald-700' : 'text-rose-700'}`}>
                       {selectedMode === 'ALL' && 'Se vaciará la base de datos por completo (productos, ventas y caja). Esta acción no se puede deshacer.'}
                       {selectedMode === 'SALES' && `Se eliminarán permanentemente las ${sales.length} ventas del registro.`}
                       {selectedMode === 'PRODUCTS' && `Se borrarán los ${products.length} productos del catálogo.`}
                       {selectedMode === 'STOCK' && `Se pondrán en 0 las cantidades de los ${products.length} productos.`}
-                      {selectedMode === 'DEMO' && 'Se sobreescribirán los datos actuales con los datos de demostración.'}
+                      {selectedMode === 'DEMO' && 'Se reemplazarán los datos actuales por los productos y ventas de demostración. Esta acción no se puede deshacer.'}
                     </p>
                   </div>
                 </div>
@@ -316,10 +311,23 @@ export const ClearDataModal: React.FC<ClearDataModalProps> = ({
                   <button
                     type="button"
                     onClick={handleExecute}
-                    className="flex-1 py-2.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                    className={`flex-1 py-2.5 rounded-lg text-white text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
+                      selectedMode === 'DEMO'
+                        ? 'bg-emerald-600 hover:bg-emerald-700'
+                        : 'bg-rose-600 hover:bg-rose-700'
+                    }`}
                   >
-                    <Trash2 className="w-4 h-4" />
-                    <span>Sí, Borrar Definitivamente</span>
+                    {selectedMode === 'DEMO' ? (
+                      <>
+                        <RotateCcw className="w-4 h-4" />
+                        <span>Sí, Cargar Datos de Muestra</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4" />
+                        <span>Sí, Borrar Definitivamente</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

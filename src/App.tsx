@@ -7,19 +7,16 @@ import { AlertsScreen } from "./components/Alerts/AlertsScreen";
 import { SalesHistoryScreen } from "./components/Sales/SalesHistoryScreen";
 import { ReportsScreen } from "./components/Reports/ReportsScreen";
 import { CashRegisterModal } from "./components/CashRegister/CashRegisterModal";
-import { SupabaseSyncModal } from "./components/Common/SupabaseSyncModal";
+import { SyncPinModal } from "./components/Common/SyncPinModal";
 import { ClearDataModal } from "./components/Common/ClearDataModal";
-import { RotateCcw, Cloud, CloudOff, Trash2 } from "lucide-react";
+import { RotateCcw, Trash2 } from "lucide-react";
 
 const KioskAppContent: React.FC = () => {
   const { 
     activeTab, 
     setActiveTab, 
     resetData, 
-    cloudEnabled,
-    cloudSyncStatus,
-    lastSyncTime,
-    manualSync
+    kioskPin
   } = useKiosk();
 
   const [showCashModal, setShowCashModal] = useState(false);
@@ -63,25 +60,15 @@ const KioskAppContent: React.FC = () => {
       <footer className="bg-white border-t border-slate-200 py-3 px-4 text-xs text-slate-500 mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${cloudEnabled ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+            <span className={`w-2 h-2 rounded-full ${kioskPin ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
             <span className="font-semibold text-slate-700">KioscoManager Pro</span>
             <span className="text-slate-300">•</span>
             <span className="text-slate-500">
-              {cloudEnabled
-                ? `Sincronizado con Supabase${lastSyncTime ? ` (última: ${lastSyncTime})` : ''}`
-                : 'Terminal Local (Toca Conectar Nube para compartir entre dispositivos)'}
+              {kioskPin ? `Sincronizado en tiempo real (PIN: ${kioskPin})` : 'Terminal Local (Toca Conectar Celulares para compartir)'}
             </span>
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowSyncModal(true)}
-              className="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 transition-colors cursor-pointer"
-            >
-              {cloudEnabled ? <Cloud className="w-3.5 h-3.5" /> : <CloudOff className="w-3.5 h-3.5" />}
-              <span>{cloudEnabled ? 'Estado de la nube' : 'Conectar Nube (Supabase)'}</span>
-            </button>
-
             <button
               id="footer-clear-data-btn"
               onClick={() => setShowClearModal(true)}
@@ -110,12 +97,9 @@ const KioskAppContent: React.FC = () => {
         onClose={() => setShowCashModal(false)}
       />
 
-      <SupabaseSyncModal
+      <SyncPinModal
         isOpen={showSyncModal}
         onClose={() => setShowSyncModal(false)}
-        syncStatus={cloudSyncStatus}
-        lastSyncTime={lastSyncTime}
-        onManualSync={manualSync}
       />
 
       <ClearDataModal

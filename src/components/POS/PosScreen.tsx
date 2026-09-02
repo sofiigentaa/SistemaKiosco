@@ -1297,7 +1297,7 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
                     {categories.map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
-                    <option value="__NEW__">➕ + Crear nueva categoría...</option>
+                    <option value="__NEW__">+ Crear nueva categoría...</option>
                   </select>
                 )}
               </div>

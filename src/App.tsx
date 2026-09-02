@@ -7,7 +7,7 @@ import { AlertsScreen } from "./components/Alerts/AlertsScreen";
 import { SalesHistoryScreen } from "./components/Sales/SalesHistoryScreen";
 import { ReportsScreen } from "./components/Reports/ReportsScreen";
 import { CashRegisterModal } from "./components/CashRegister/CashRegisterModal";
-import { SyncPinModal } from "./components/Common/SyncPinModal";
+import { SupabaseSyncModal } from "./components/Common/SupabaseSyncModal";
 import { ClearDataModal } from "./components/Common/ClearDataModal";
 import { RotateCcw, Trash2 } from "lucide-react";
 
@@ -97,7 +97,7 @@ const KioskAppContent: React.FC = () => {
         onClose={() => setShowCashModal(false)}
       />
 
-      <SyncPinModal
+      <SupabaseSyncModal
         isOpen={showSyncModal}
         onClose={() => setShowSyncModal(false)}
       />

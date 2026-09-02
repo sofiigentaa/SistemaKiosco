@@ -36,24 +36,54 @@ export const SupabaseSyncModal: React.FC<SupabaseSyncModalProps> = ({
   };
 
   const sqlQuickScript = `-- EJECUTA ESTO EN SUPABASE > SQL EDITOR:
-
--- Una sola tabla que guarda todo el estado del kiosco (productos, ventas,
--- movimientos de stock, turno de caja y categorías) como JSON. Todos los
--- dispositivos leen y escriben esta misma fila.
-CREATE TABLE IF NOT EXISTS kiosk_state (
+CREATE TABLE IF NOT EXISTS products (
   id TEXT PRIMARY KEY,
-  data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  barcode TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  cost_price NUMERIC NOT NULL DEFAULT 0,
+  sale_price NUMERIC NOT NULL DEFAULT 0,
+  stock NUMERIC NOT NULL DEFAULT 0,
+  min_stock NUMERIC NOT NULL DEFAULT 5,
+  unit TEXT NOT NULL DEFAULT 'u',
+  expiration_date TEXT,
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Habilitar lectura/escritura instantánea (sin login, ideal para este caso):
-ALTER TABLE kiosk_state ENABLE ROW LEVEL SECURITY;
+CREATE TABLE IF NOT EXISTS sales (
+  id TEXT PRIMARY KEY,
+  date TIMESTAMPTZ NOT NULL DEFAULT now(),
+  total NUMERIC NOT NULL,
+  total_cost NUMERIC NOT NULL DEFAULT 0,
+  total_profit NUMERIC NOT NULL DEFAULT 0,
+  payment_method TEXT NOT NULL,
+  amount_paid NUMERIC,
+  change_amount NUMERIC DEFAULT 0,
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  status TEXT NOT NULL DEFAULT 'completada',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
-CREATE POLICY "Permitir todo a anon" ON kiosk_state FOR ALL USING (true) WITH CHECK (true);
+CREATE TABLE IF NOT EXISTS cash_shifts (
+  id TEXT PRIMARY KEY,
+  opened_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  closed_at TIMESTAMPTZ,
+  initial_cash NUMERIC NOT NULL DEFAULT 0,
+  final_cash_calculated NUMERIC,
+  final_cash_real NUMERIC,
+  is_open BOOLEAN NOT NULL DEFAULT true,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
--- Habilitar actualizaciones en tiempo real para que los demás celulares
--- reciban los cambios al instante:
-ALTER PUBLICATION supabase_realtime ADD TABLE kiosk_state;
+-- Habilitar lectura/escritura pública instantánea:
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sales ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cash_shifts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Permitir todo a anon" ON products FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Permitir todo a anon" ON sales FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Permitir todo a anon" ON cash_shifts FOR ALL USING (true) WITH CHECK (true);
 `;
 
   const copySql = () => {
@@ -135,7 +165,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE kiosk_state;
               <li>En el menú lateral entra en <strong>SQL Editor</strong>, pega el código rápido de abajo y dale a <strong>Run</strong>.</li>
               <li>Ve a <strong>Project Settings &gt; API</strong> y copia la <strong>URL</strong> y la clave <strong>anon / public key</strong>.</li>
               <li>Pégalas en el formulario de abajo y dale a <strong>Guardar y Conectar</strong>. ¡Listo!</li>
-              <li>Repetí este mismo paso (pegar la misma URL y key) en cada celular o compu que quieras que comparta los mismos datos.</li>
             </ol>
             
             <button

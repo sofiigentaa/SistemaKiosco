@@ -158,16 +158,7 @@ export const CashRegisterModal: React.FC<CashRegisterModalProps> = ({ isOpen, on
               </button>
             </div>
 
-            {shiftMode === 'RECEIPT_PREVIEW' && (
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="flex items-center gap-1 px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-all shadow-2xs"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Imprimir Ticket</span>
-              </button>
-            )}
+            {shiftMode === 'RECEIPT_PREVIEW' && null}
           </div>
         )}
 

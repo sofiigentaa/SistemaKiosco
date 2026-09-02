@@ -34,14 +34,14 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ onGoToInventory, onG
 
   const [activeSubTab, setActiveSubTab] = useState<'ALL' | 'STOCK' | 'EXPIRY'>('ALL');
   const [quickRestockModal, setQuickRestockModal] = useState<Product | null>(null);
-  const [quickRestockQty, setQuickRestockQty] = useState<number>(10);
+  const [quickRestockQty, setQuickRestockQty] = useState<number | ''>(10);
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
   const [showBulkExpiryModal, setShowBulkExpiryModal] = useState(false);
 
   const handleQuickRestock = () => {
-    if (!quickRestockModal || quickRestockQty <= 0) return;
-    restockProduct(quickRestockModal.id, quickRestockQty);
+    if (!quickRestockModal || !quickRestockQty || Number(quickRestockQty) <= 0) return;
+    restockProduct(quickRestockModal.id, Number(quickRestockQty));
     setSuccessToast('Se agregaron ' + quickRestockQty + ' unidades a ' + quickRestockModal.name);
     setQuickRestockModal(null);
     setTimeout(() => setSuccessToast(null), 3000);
@@ -49,7 +49,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ onGoToInventory, onG
 
   const handleApplyDiscountUpdates = (updates: Array<{ id: string; newPrice: number }>, label: string) => {
     updates.forEach((u) => {
-      updateProduct(u.id, { salePrice: u.newPrice, liquidationApplied: true });
+      updateProduct(u.id, { salePrice: u.newPrice });
     });
     setSuccessToast(label);
     setTimeout(() => setSuccessToast(null), 3500);
@@ -244,7 +244,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ onGoToInventory, onG
                     <button
                       onClick={() => {
                         setQuickRestockModal(p);
-                        setQuickRestockQty(p.minStock * 2);
+                        setQuickRestockQty(Math.max(p.minStock * 2, 5));
                       }}
                       className="px-3 py-1 rounded bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all flex items-center gap-1"
                     >
@@ -323,7 +323,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ onGoToInventory, onG
                   key={p.id}
                   product={p}
                   onUpdatePrice={(productId, newPrice, label) => {
-                    updateProduct(productId, { salePrice: newPrice, liquidationApplied: true });
+                    updateProduct(productId, { salePrice: newPrice });
                     setSuccessToast(label);
                     setTimeout(() => setSuccessToast(null), 3000);
                   }}
@@ -376,7 +376,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ onGoToInventory, onG
                 type="number"
                 min="1"
                 value={quickRestockQty}
-                onChange={(e) => setQuickRestockQty(Number(e.target.value))}
+                onChange={(e) => setQuickRestockQty(e.target.value === '' ? '' : Number(e.target.value))}
                 className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1.5 text-base font-bold font-mono text-slate-900"
               />
             </div>

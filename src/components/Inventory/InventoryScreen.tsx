@@ -841,7 +841,7 @@ export const InventoryScreen: React.FC = () => {
                       id="prod-cost-input"
                       type="number"
                       min="0"
-                      step="10"
+                      step="1"
                       value={formData.costPrice}
                       onChange={(e) => setFormData({ ...formData, costPrice: e.target.value === '' ? '' : Number(e.target.value) })}
                       className="w-full bg-white border border-slate-300 rounded px-2.5 py-1.5 text-xs font-bold font-mono text-slate-900"
@@ -857,7 +857,7 @@ export const InventoryScreen: React.FC = () => {
                       type="number"
                       required
                       min="1"
-                      step="10"
+                      step="1"
                       value={formData.salePrice}
                       onChange={(e) => setFormData({ ...formData, salePrice: e.target.value === '' ? '' : Number(e.target.value) })}
                       className="w-full bg-white border border-indigo-400 rounded px-2.5 py-1.5 text-sm font-bold font-mono text-slate-950 focus:ring-1 focus:ring-indigo-500"

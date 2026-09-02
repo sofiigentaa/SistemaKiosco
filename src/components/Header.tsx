@@ -9,7 +9,8 @@ import {
   Search,
   Plus,
   Cloud,
-  CloudOff
+  CloudOff,
+  Trash2
 } from "lucide-react";
 import { useKiosk } from "../context/KioskContext";
 import { formatCurrency } from "../utils/formatters";
@@ -18,9 +19,10 @@ interface HeaderProps {
   onOpenCashModal: () => void;
   onOpenQuickSaleModal?: () => void;
   onOpenSyncModal?: () => void;
+  onOpenClearModal?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenCashModal }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModal }) => {
   const { 
     activeTab, 
     setActiveTab, 
@@ -195,6 +197,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal }) => {
                 {currentShift?.isOpen ? "Caja" : "Abrir"}
               </span>
             </button>
+
+            {/* Borrar Datos Button */}
+            {onOpenClearModal && (
+              <button
+                id="header-clear-data-btn"
+                onClick={onOpenClearModal}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-bold transition-all border border-slate-700 bg-slate-800 hover:bg-rose-900/40 hover:border-rose-700/50 text-slate-300 hover:text-rose-300 shadow-xs cursor-pointer shrink-0"
+                title="Borrar o reiniciar datos (ventas, stock, productos o todo)"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                <span className="hidden md:inline">Borrar Datos</span>
+              </button>
+            )}
           </div>
         </div>
 

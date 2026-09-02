@@ -1309,7 +1309,7 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
                   <input
                     type="number"
                     min="0"
-                    step="10"
+                    step="1"
                     value={quickForm.costPrice}
                     onChange={(e) => setQuickForm({ ...quickForm, costPrice: e.target.value === '' ? '' : Number(e.target.value) })}
                     className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-bold font-mono text-slate-900"
@@ -1322,7 +1322,7 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
                   <input
                     type="number"
                     min="1"
-                    step="10"
+                    step="1"
                     required
                     value={quickForm.salePrice}
                     onChange={(e) => setQuickForm({ ...quickForm, salePrice: e.target.value === '' ? '' : Number(e.target.value) })}

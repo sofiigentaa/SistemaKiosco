@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Package, 
   Plus, 
@@ -36,10 +36,19 @@ export const InventoryScreen: React.FC = () => {
     applyBulkPriceAdjustment,
     categories,
     addCategory,
-    deleteCategory
+    deleteCategory,
+    searchFilter,
   } = useKiosk();
 
   const [search, setSearch] = useState('');
+
+  // Keep this screen's search box in sync with the global search bar in the
+  // header, so a search typed there also filters the inventory table (it
+  // previously only worked on the POS screen).
+  useEffect(() => {
+    setSearch(searchFilter);
+  }, [searchFilter]);
+
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [stockFilter, setStockFilter] = useState<'ALL' | 'LOW' | 'OUT' | 'EXPIRING'>('ALL');
   
@@ -575,7 +584,11 @@ export const InventoryScreen: React.FC = () => {
 
                       {/* Margin % */}
                       <td className="py-2 px-3 text-center">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold font-mono border ${
+                          margin < 0
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}>
                           {formatPercent(margin)}
                         </span>
                       </td>
@@ -799,7 +812,6 @@ export const InventoryScreen: React.FC = () => {
                       {categories.map((c) => (
                         <option key={c} value={c}>{c}</option>
                       ))}
-                      <option value="__NEW__">➕ + Crear nueva categoría...</option>
                     </select>
                   )}
                 </div>
@@ -853,24 +865,12 @@ export const InventoryScreen: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Auto Calculated Live Indicators */}
-                <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono">
-                  <div className="bg-white p-1.5 rounded border border-indigo-100">
-                    <div className="text-[9px] text-slate-400 font-bold uppercase">Ganancia Neta</div>
-                    <div className="text-xs font-bold text-emerald-600 mt-0.5">
+                {/* Auto Calculated Live Indicator */}
+                <div className="pt-1 text-center font-mono">
+                  <div className={`bg-white p-2 rounded border ${profitPerUnit < 0 ? 'border-rose-200' : 'border-indigo-100'}`}>
+                    <div className="text-[9px] text-slate-400 font-bold uppercase">Ganancia por Unidad</div>
+                    <div className={`text-sm font-bold mt-0.5 ${profitPerUnit < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                       {formatCurrency(profitPerUnit)}
-                    </div>
-                  </div>
-                  <div className="bg-white p-1.5 rounded border border-indigo-100">
-                    <div className="text-[9px] text-slate-400 font-bold uppercase">Recargo</div>
-                    <div className="text-xs font-bold text-indigo-600 mt-0.5">
-                      {formatPercent(markupPercent)}
-                    </div>
-                  </div>
-                  <div className="bg-white p-1.5 rounded border border-indigo-100">
-                    <div className="text-[9px] text-slate-400 font-bold uppercase">Margen Com.</div>
-                    <div className="text-xs font-bold text-slate-800 mt-0.5">
-                      {marginPercent.toFixed(1)}%
                     </div>
                   </div>
                 </div>

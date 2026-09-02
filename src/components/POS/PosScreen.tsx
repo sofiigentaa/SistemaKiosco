@@ -65,7 +65,7 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [showCustomItemModal, setShowCustomItemModal] = useState(false);
-  const [customItemName, setCustomItemName] = useState('Varios / Golosina suelta');
+  const [customItemName, setCustomItemName] = useState('');
   const [customItemPrice, setCustomItemPrice] = useState<number | ''>(500);
 
   // Quick Add Product Modal (when barcode/name not found or when clicking "+ Agregar")
@@ -365,7 +365,7 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
 
     setShowCustomItemModal(false);
     setCustomItemPrice(500);
-    setCustomItemName('Varios / Golosina suelta');
+    setCustomItemName('');
   };
 
   const cartSubtotal = cart.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0);

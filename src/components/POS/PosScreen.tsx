@@ -195,7 +195,7 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
     const isDigits = /^\d+$/.test(initialCode);
     setQuickError(null);
     setQuickForm({
-      barcode: initialCode && isDigits ? initialCode : '779' + Math.floor(1000000000 + Math.random() * 9000000000),
+      barcode: initialCode && isDigits ? initialCode : '',
       name: initialCode && !isDigits ? initialCode : '',
       category: categories[0] || 'Golosinas & Chocolates',
       costPrice: 500,

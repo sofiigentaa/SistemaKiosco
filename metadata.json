@@ -1,0 +1,6 @@
+{
+  "name": "Granja y Kiosco Don Ramón",
+  "description": "Sistema de gestión integral para Granja y Kiosco Don Ramón: punto de venta rápido (POS), inventario, alertas de stock bajo, arqueo de caja y reportes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

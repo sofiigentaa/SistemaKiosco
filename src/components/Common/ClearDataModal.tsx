@@ -91,12 +91,16 @@ export const ClearDataModal: React.FC<ClearDataModalProps> = ({
         {/* Header */}
         <div className="bg-slate-900 px-5 py-4 text-white flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-rose-500/20 border border-rose-500/30 flex items-center justify-center text-rose-400">
-              <Trash2 className="w-4 h-4" />
+            <div className={`w-8 h-8 rounded-lg border flex items-center justify-center ${
+              selectedMode === 'DEMO'
+                ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                : 'bg-rose-500/20 border-rose-500/30 text-rose-400'
+            }`}>
+              {selectedMode === 'DEMO' ? <RotateCcw className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
             </div>
             <div>
               <h3 className="text-sm font-bold tracking-wide uppercase text-white">
-                Borrar Datos del Sistema
+                {selectedMode === 'DEMO' ? 'Datos de Demostración' : 'Borrar Datos del Sistema'}
               </h3>
               <p className="text-[11px] text-slate-400">
                 Seleccione qué información desea vaciar o reiniciar
@@ -290,22 +294,34 @@ export const ClearDataModal: React.FC<ClearDataModalProps> = ({
                 <div className={`p-3.5 border rounded-lg flex items-start gap-3 ${
                   selectedMode === 'DEMO'
                     ? 'bg-emerald-50 border-emerald-200'
+                    : selectedMode === 'STOCK'
+                    ? 'bg-amber-50 border-amber-200'
                     : 'bg-rose-50 border-rose-200'
                 }`}>
                   {selectedMode === 'DEMO' ? (
                     <RotateCcw className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : selectedMode === 'STOCK' ? (
+                    <PackageX className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                   ) : (
                     <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                   )}
                   <div>
-                    <h4 className={`text-xs font-bold ${selectedMode === 'DEMO' ? 'text-emerald-900' : 'text-rose-900'}`}>
-                      {selectedMode === 'DEMO' ? '¿Confirmar carga de datos de muestra?' : '¿Confirmar borrado de datos?'}
+                    <h4 className={`text-xs font-bold ${
+                      selectedMode === 'DEMO' ? 'text-emerald-900' : selectedMode === 'STOCK' ? 'text-amber-900' : 'text-rose-900'
+                    }`}>
+                      {selectedMode === 'DEMO'
+                        ? '¿Confirmar carga de datos de muestra?'
+                        : selectedMode === 'STOCK'
+                        ? '¿Confirmar reinicio de stock a 0?'
+                        : '¿Confirmar borrado de datos?'}
                     </h4>
-                    <p className={`text-xs mt-0.5 ${selectedMode === 'DEMO' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    <p className={`text-xs mt-0.5 ${
+                      selectedMode === 'DEMO' ? 'text-emerald-700' : selectedMode === 'STOCK' ? 'text-amber-700' : 'text-rose-700'
+                    }`}>
                       {selectedMode === 'ALL' && 'Se vaciará la base de datos por completo (productos, ventas y caja). Esta acción no se puede deshacer.'}
                       {selectedMode === 'SALES' && `Se eliminarán permanentemente las ${sales.length} ventas del registro.`}
                       {selectedMode === 'PRODUCTS' && `Se borrarán los ${products.length} productos del catálogo.`}
-                      {selectedMode === 'STOCK' && `Se pondrán en 0 las cantidades de los ${products.length} productos.`}
+                      {selectedMode === 'STOCK' && `Se pondrán en 0 las cantidades de los ${products.length} productos. Los nombres, precios y códigos se conservan.`}
                       {selectedMode === 'DEMO' && 'Se reemplazarán los datos actuales por los productos y ventas de demostración. Esta acción no se puede deshacer.'}
                     </p>
                   </div>
@@ -325,6 +341,8 @@ export const ClearDataModal: React.FC<ClearDataModalProps> = ({
                     className={`flex-1 py-2.5 rounded-lg text-white text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors ${
                       selectedMode === 'DEMO'
                         ? 'bg-emerald-600 hover:bg-emerald-700'
+                        : selectedMode === 'STOCK'
+                        ? 'bg-amber-600 hover:bg-amber-700'
                         : 'bg-rose-600 hover:bg-rose-700'
                     }`}
                   >
@@ -332,6 +350,11 @@ export const ClearDataModal: React.FC<ClearDataModalProps> = ({
                       <>
                         <RotateCcw className="w-4 h-4" />
                         <span>Sí, Cargar Datos de Muestra</span>
+                      </>
+                    ) : selectedMode === 'STOCK' ? (
+                      <>
+                        <PackageX className="w-4 h-4" />
+                        <span>Sí, Poner Stock en 0</span>
                       </>
                     ) : (
                       <>

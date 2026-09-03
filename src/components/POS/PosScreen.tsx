@@ -21,13 +21,15 @@ import {
   ShoppingCart,
   Tags,
   Check,
-  X
+  X,
+  Camera
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useKiosk } from '../../context/KioskContext';
 import { Product, CartItem, PaymentMethod, Sale } from '../../types';
 import { formatCurrency } from '../../utils/formatters';
 import { playScannerBeep } from '../../utils/audio';
+import { CameraBarcodeScannerModal } from './CameraBarcodeScannerModal';
 
 interface PosScreenProps {
   onSaleCompleted: (sale: Sale) => void;
@@ -49,6 +51,7 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
   const [mobileView, setMobileView] = useState<'catalog' | 'ticket'>('catalog');
   const [barcodeInput, setBarcodeInput] = useState('');
   const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
   const categoryScrollRef = useRef<HTMLDivElement>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [isCategoryWrapped, setIsCategoryWrapped] = useState<boolean>(false);
@@ -276,11 +279,11 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
     setTimeout(() => setFeedbackMessage(null), 2500);
   };
 
-  const handleBarcodeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = barcodeInput.trim();
+  // Shared resolver used both by the manual barcode input (physical
+  // scanner / keyboard) and by the camera-based scanner modal.
+  const processScannedCode = (rawCode: string) => {
+    const code = rawCode.trim();
     if (!code) {
-      // If clicked without input, open quick creation modal
       openQuickProductModal('');
       return;
     }
@@ -303,6 +306,18 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
       // Open Quick Product Creation Modal with this code/name prefilled!
       openQuickProductModal(code);
     }
+  };
+
+  const handleBarcodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    processScannedCode(barcodeInput);
+  };
+
+  const handleCameraScan = (code: string) => {
+    // Close the camera modal first so the success/creation feedback and
+    // any Quick Add modal are clearly visible to the user.
+    setShowCameraScanner(false);
+    processScannedCode(code);
   };
 
   const updateQuantity = (productId: string, newQty: number) => {
@@ -507,6 +522,17 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Agregar</span>
+                </button>
+
+                <button
+                  type="button"
+                  id="pos-camera-scan-btn"
+                  onClick={() => setShowCameraScanner(true)}
+                  className="flex-1 sm:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-2 rounded text-xs transition-all border border-slate-200 flex items-center justify-center gap-1.5"
+                  title="Escanear código de barras con la cámara del dispositivo"
+                >
+                  <Camera className="w-3.5 h-3.5 text-indigo-600" />
+                  <span className="inline">Cámara</span>
                 </button>
 
                 <button
@@ -1086,6 +1112,13 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
           </div>
         </div>
       )}
+
+      {/* CAMERA BARCODE SCANNER MODAL */}
+      <CameraBarcodeScannerModal
+        isOpen={showCameraScanner}
+        onClose={() => setShowCameraScanner(false)}
+        onScan={handleCameraScan}
+      />
 
       {/* QUICK CUSTOM ITEM MODAL (Golosina suelta / Varios) */}
       {showCustomItemModal && (

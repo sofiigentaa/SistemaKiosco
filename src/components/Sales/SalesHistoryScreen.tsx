@@ -18,7 +18,7 @@ interface SalesHistoryScreenProps {
 }
 
 export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = () => {
-  const { sales } = useKiosk();
+  const { sales, settleFiado } = useKiosk();
 
   const [search, setSearch] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<string>('ALL');
@@ -29,11 +29,13 @@ export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = () => {
   const [viewingSale, setViewingSale] = useState<Sale | null>(null);
 
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
-  
+  // Fechas locales (Argentina): antes, después de las 21 h "Hoy" mostraba el día siguiente.
+  const localDay = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const todayStr = localDay(now);
+
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  const yesterdayStr = localDay(yesterday);
 
   const weekAgo = new Date(now);
   weekAgo.setDate(weekAgo.getDate() - 7);
@@ -42,10 +44,12 @@ export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = () => {
   monthAgo.setDate(monthAgo.getDate() - 30);
 
   const filteredSales = sales.filter((s) => {
-    if (selectedMethod !== 'ALL' && s.paymentMethod !== selectedMethod) return false;
+    if (selectedMethod === 'FIADO_PENDIENTE') {
+      if (s.paymentMethod !== 'Cuenta Corriente (Fiado)' || s.fiadoPaidAt || s.status !== 'completada') return false;
+    } else if (selectedMethod !== 'ALL' && s.paymentMethod !== selectedMethod) return false;
 
-    if (dateFilter === 'TODAY' && !s.date.startsWith(todayStr)) return false;
-    if (dateFilter === 'YESTERDAY' && !s.date.startsWith(yesterdayStr)) return false;
+    if (dateFilter === 'TODAY' && localDay(new Date(s.date)) !== todayStr) return false;
+    if (dateFilter === 'YESTERDAY' && localDay(new Date(s.date)) !== yesterdayStr) return false;
     if (dateFilter === 'WEEK' && new Date(s.date) < weekAgo) return false;
     if (dateFilter === 'MONTH' && new Date(s.date) < monthAgo) return false;
 
@@ -216,6 +220,7 @@ export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = () => {
               <option value="Tarjeta de Crédito">Tarjeta Crédito</option>
               <option value="Transferencia / MP">Transferencia / MP</option>
               <option value="Cuenta Corriente (Fiado)">Cuenta Corriente (Fiado)</option>
+              <option value="FIADO_PENDIENTE">Fiados sin cobrar</option>
             </select>
           </div>
 
@@ -280,6 +285,13 @@ export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = () => {
                         <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium text-[10px]">
                           {s.paymentMethod}
                         </span>
+                        {s.paymentMethod === 'Cuenta Corriente (Fiado)' && s.status === 'completada' && (
+                          s.fiadoPaidAt ? (
+                            <div className="text-[10px] text-emerald-700 font-semibold mt-0.5">Cobrado ({s.fiadoPaidMethod})</div>
+                          ) : (
+                            <div className="text-[10px] text-rose-700 font-bold mt-0.5">Debe</div>
+                          )
+                        )}
                       </td>
 
                       {/* Total */}
@@ -359,6 +371,35 @@ export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = () => {
                 <span>{formatCurrency(viewingSale.totalProfit)}</span>
               </div>
             </div>
+
+            {viewingSale.paymentMethod === 'Cuenta Corriente (Fiado)' && viewingSale.status === 'completada' && (
+              viewingSale.fiadoPaidAt ? (
+                <p className="text-xs text-emerald-700 font-semibold bg-emerald-50 border border-emerald-200 rounded px-2.5 py-1.5">
+                  Fiado cobrado el {formatDateTime(viewingSale.fiadoPaidAt)} ({viewingSale.fiadoPaidMethod}).
+                </p>
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 rounded p-2.5 space-y-2">
+                  <p className="text-xs text-amber-900 font-semibold">
+                    {viewingSale.customerName || 'Cliente'} debe {formatCurrency(viewingSale.total)}. ¿Cómo lo pagó?
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(['Efectivo', 'Transferencia / MP', 'Tarjeta de Débito'] as const).map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => {
+                          settleFiado(viewingSale.id, m);
+                          setViewingSale({ ...viewingSale, fiadoPaidAt: new Date().toISOString(), fiadoPaidMethod: m });
+                        }}
+                        className="px-2.5 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold"
+                      >
+                        Cobrar en {m}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            )}
 
             <div className="flex justify-end pt-1">
               <button

@@ -13,6 +13,7 @@ import {
   Trash2
 } from "lucide-react";
 import { useKiosk } from "../context/KioskContext";
+import { BRAND } from '../config/brand';
 import { formatCurrency } from "../utils/formatters";
 
 interface HeaderProps {
@@ -82,9 +83,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModa
           <div className="flex items-center gap-2.5">
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
-                  <span>Granja y Kiosco</span>
-                  <span className="text-emerald-400 font-semibold">Don Ramón</span>
+                <span className="font-bold text-sm sm:text-base tracking-tight text-white flex flex-col sm:flex-row sm:items-center sm:gap-1.5 leading-tight">
+                  <span>{BRAND.first}</span>
+                  <span className="text-emerald-400 font-semibold">{BRAND.second}</span>
                 </span>
 
                 {/* Supabase Cloud Sync Indicator (informational only, no click action) */}
@@ -101,12 +102,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModa
                   ) : (
                     <CloudOff className="w-3 h-3 text-amber-400" />
                   )}
-                  <span>
+                  <span className="hidden sm:inline">
                     {cloudEnabled
                       ? cloudSyncStatus === 'syncing'
                         ? 'Sincronizando…'
-                        : 'En la nube'
-                      : 'Sin conectar'}
+                        : cloudSyncStatus === 'error'
+                          ? 'Sin conexión'
+                          : 'En la nube'
+                      : 'Modo local'}
                   </span>
                 </span>
               </div>
@@ -118,8 +121,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModa
             </div>
           </div>
 
-          {/* Quick Global Search Bar */}
-          <div className="flex-1 max-w-sm mx-2">
+          {/* Quick Global Search Bar (en celular se usa el buscador de la venta) */}
+          <div className="flex-1 max-w-sm mx-2 hidden md:block">
             <div className="relative w-full">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
               <input
@@ -198,18 +201,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModa
               </span>
             </button>
 
-            {/* Borrar Datos Button */}
-            {onOpenClearModal && (
-              <button
-                id="header-clear-data-btn"
-                onClick={onOpenClearModal}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-bold transition-all border border-slate-700 bg-slate-800 hover:bg-rose-900/40 hover:border-rose-700/50 text-slate-300 hover:text-rose-300 shadow-xs cursor-pointer shrink-0"
-                title="Borrar o reiniciar datos (ventas, stock, productos o todo)"
-              >
-                <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-                <span className="hidden md:inline">Borrar Datos</span>
-              </button>
-            )}
           </div>
         </div>
 

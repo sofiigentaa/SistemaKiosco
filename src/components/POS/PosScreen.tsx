@@ -393,6 +393,15 @@ export const PosScreen: React.FC<PosScreenProps> = ({ onSaleCompleted }) => {
   const handleCompleteSale = () => {
     if (cart.length === 0) return;
 
+    // El fiado necesita saber a quién se le fía (antes se podía guardar sin nombre).
+    if (paymentMethod === 'Cuenta Corriente (Fiado)' && !customerName.trim()) {
+      setFeedbackMessage({
+        type: 'error',
+        text: 'Para fiar, escribí el nombre del cliente.',
+      });
+      return;
+    }
+
     if (paymentMethod === 'Efectivo' && numericCashReceived < cartTotal && numericCashReceived > 0) {
       setFeedbackMessage({
         type: 'error',

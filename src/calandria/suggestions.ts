@@ -2,7 +2,7 @@ import { Product, Sale, StockMovement } from '../types';
 import { getDaysUntil } from '../utils/formatters';
 import { CalandriaKind } from './chain';
 
-// Calandria mira lo que ya está cargado en el sistema y propone las tareas que
+// Cotorra mira lo que ya está cargado en el sistema y propone las tareas que
 // el kiosco repite siempre. No hace nada sola: cada propuesta espera el botón.
 //
 // Los minutos ahorrados son una estimación de cuánto lleva hacerlo a mano

@@ -25,7 +25,7 @@ export const LoginScreen: React.FC = () => {
       <form onSubmit={handleSubmit} data-testid="login-form" className="w-full max-w-sm bg-white rounded-xl shadow-xl p-6 space-y-4">
         <div className="flex flex-col items-center gap-1.5 pb-1">
           <CalandriaMark className="w-14 h-16" />
-          <div className="font-bold text-xl text-slate-900 tracking-tight">Calandria</div>
+          <div className="font-bold text-xl text-slate-900 tracking-tight">Cotorra</div>
           <p className="text-[11px] font-medium text-slate-500 flex items-center gap-1"><Lock className="w-3 h-3" /> Acceso al sistema</p>
         </div>
 

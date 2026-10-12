@@ -10,7 +10,7 @@ import { MessageCircle, Send, X, ArrowRight, Mic, Square } from 'lucide-react';
 export interface Respuesta {
   texto: string;
   lineas?: string[];
-  // enLugar: la acción no necesita abrir el sistema completo (p. ej. soporte o Calandria)
+  // enLugar: la acción no necesita abrir el sistema completo (p. ej. soporte o Cotorra)
   accion?: { etiqueta: string; hacer: () => void; enLugar?: boolean };
 }
 

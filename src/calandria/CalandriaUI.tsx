@@ -3,9 +3,9 @@ import { CheckCircle2, Copy, Pause, Play, ShieldAlert, ShieldCheck, X, Clock, Me
 import { formatMinutes, useCalandria } from './CalandriaContext';
 import { CalandriaKind } from './chain';
 
-// Logo de Calandria: la C de circuito dentro del escudo (misma familia que TERO).
+// Logo de Cotorra: la C de circuito dentro del escudo (misma familia que TERO).
 export const CalandriaMark: React.FC<{ className?: string; light?: boolean }> = ({ className, light }) => (
-  <svg viewBox="0 0 100 115" fill="none" className={className} role="img" aria-label="Calandria">
+  <svg viewBox="0 0 100 115" fill="none" className={className} role="img" aria-label="Cotorra">
     <path
       d="M 50 6 L 89 19 C 89 62 80 92 50 110 C 20 92 11 62 11 19 Z"
       fill={light ? '#FFFFFF' : '#0B1220'}
@@ -24,7 +24,7 @@ export const KIND_LABEL: Record<CalandriaKind, string> = {
   ingreso_habitual: 'Ingreso habitual de mercadería',
   liquidacion: 'Precio de productos por vencer',
   fiados: 'Recordatorios de fiado',
-  sistema: 'Calandria',
+  sistema: 'Cotorra',
 };
 const ACTION_LABEL = { aprobada: 'Aprobada', descartada: 'Ahora no', pausa: 'Pausada', reanudada: 'Reanudada' } as const;
 
@@ -35,7 +35,7 @@ const Light: React.FC<{ className?: string }> = ({ className = 'w-2.5 h-2.5' }) 
   return <span className={`${className} rounded-full inline-block ${color}`} aria-hidden="true" />;
 };
 
-// Marca del sistema: el logo de Calandria arriba a la izquierda. Tocarlo abre el panel.
+// Marca del sistema: el logo de Cotorra arriba a la izquierda. Tocarlo abre el panel.
 export const CalandriaBrand: React.FC<{ onDark?: boolean; onClick?: () => void }> = ({ onDark = true, onClick }) => {
   const { suggestions, setPanelOpen, minutesThisMonth, paused } = useCalandria();
   const estado = paused
@@ -49,12 +49,12 @@ export const CalandriaBrand: React.FC<{ onDark?: boolean; onClick?: () => void }
       type="button"
       onClick={onClick || (() => setPanelOpen(true))}
       className={`relative flex items-center gap-2.5 rounded-xl pr-2 py-1 text-left transition-colors cursor-pointer ${onDark ? 'hover:bg-white/5' : 'hover:bg-slate-100'}`}
-      title="Calandria: tareas para aprobar con un botón"
+      title="Cotorra: tareas para aprobar con un botón"
     >
       <CalandriaMark className="w-8 h-9 sm:w-9 sm:h-10 shrink-0" />
       <span className="flex flex-col leading-tight">
         <span className={`flex items-center gap-1.5 font-bold text-base sm:text-lg tracking-tight ${onDark ? 'text-white' : 'text-slate-900'}`}>
-          Calandria
+          Cotorra
           {suggestions.length > 0 && (
             <span className="min-w-5 h-5 px-1 rounded-full bg-amber-400 text-slate-900 text-[11px] font-black flex items-center justify-center" aria-label={`${suggestions.length} tareas para aprobar`}>
               {suggestions.length}
@@ -79,7 +79,7 @@ export const CalandriaPanel: React.FC = () => {
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/50 backdrop-blur-xs" onClick={() => c.setPanelOpen(false)}>
       <aside
         role="dialog"
-        aria-label="Calandria"
+        aria-label="Cotorra"
         data-testid="calandria-panel"
         className="w-full sm:max-w-md h-full bg-slate-50 shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -88,7 +88,7 @@ export const CalandriaPanel: React.FC = () => {
         <div className="bg-slate-900 text-white px-4 py-3 flex items-center gap-3">
           <CalandriaMark className="w-9 h-10 shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-base leading-tight">Calandria</div>
+            <div className="font-bold text-base leading-tight">Cotorra</div>
             <div className="text-[11px] text-slate-300 flex items-center gap-1.5">
               <Light className="w-2 h-2" />
               {c.paused
@@ -104,7 +104,7 @@ export const CalandriaPanel: React.FC = () => {
             className={`flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-bold cursor-pointer ${
               c.paused ? 'bg-emerald-500 text-slate-900 hover:bg-emerald-400' : 'bg-slate-700 hover:bg-slate-600 text-white'
             }`}
-            title={c.paused ? 'Volver a activar Calandria' : 'Que Calandria deje de proponer'}
+            title={c.paused ? 'Volver a activar Cotorra' : 'Que Cotorra deje de proponer'}
           >
             {c.paused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
             {c.paused ? 'Reanudar' : 'Pará'}
@@ -144,7 +144,7 @@ export const CalandriaPanel: React.FC = () => {
               </button>
               <div className="text-xs text-slate-300">
                 <div className="text-white font-bold text-sm mb-1">{first.title}</div>
-                Un toque y listo. También funciona con la tecla <b className="text-cyan-300">F9</b> o con el botón físico Calandria.
+                Un toque y listo. También funciona con la tecla <b className="text-cyan-300">F9</b> o con el botón físico Cotorra.
               </div>
             </div>
           )}
@@ -153,12 +153,12 @@ export const CalandriaPanel: React.FC = () => {
           {!c.paused && c.suggestions.length === 0 && (
             <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 flex gap-2">
               <CheckCircle2 className="w-5 h-5 shrink-0" />
-              <span>Todo en orden. Calandria sigue mirando y te avisa con la luz cuando haya algo para hacer.</span>
+              <span>Todo en orden. Cotorra sigue mirando y te avisa con la luz cuando haya algo para hacer.</span>
             </div>
           )}
           {c.paused && (
             <div className="rounded-lg border border-slate-300 bg-white p-4 text-sm text-slate-700">
-              Calandria está en pausa. No propone ni hace nada hasta que toques <b>Reanudar</b>.
+              Cotorra está en pausa. No propone ni hace nada hasta que toques <b>Reanudar</b>.
             </div>
           )}
           {c.suggestions.map((s) => (
@@ -226,7 +226,7 @@ export const CalandriaLogModal: React.FC = () => {
     <div className="fixed inset-0 z-[60] bg-slate-950/70 flex items-center justify-center p-3" onClick={() => c.setLogOpen(false)}>
       <div
         role="dialog"
-        aria-label="Registro sellado de Calandria"
+        aria-label="Registro sellado de Cotorra"
         className="bg-white w-full max-w-3xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
@@ -235,7 +235,7 @@ export const CalandriaLogModal: React.FC = () => {
           <div className="flex-1">
             <h3 className="font-bold text-slate-900 text-sm">Registro sellado</h3>
             <p className="text-[11px] text-slate-500">
-              Qué hizo Calandria y cuándo. Sin nombres ni datos de clientes: solo el tipo de tarea y la cantidad.
+              Qué hizo Cotorra y cuándo. Sin nombres ni datos de clientes: solo el tipo de tarea y la cantidad.
             </p>
           </div>
           <button type="button" onClick={() => c.setLogOpen(false)} className="p-1.5 rounded hover:bg-slate-100 cursor-pointer" aria-label="Cerrar">
@@ -349,13 +349,13 @@ export const CalandriaResultModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-[60] bg-slate-950/70 flex items-center justify-center p-3">
-      <div role="dialog" aria-label="Resultado de Calandria" className="bg-white w-full max-w-lg max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+      <div role="dialog" aria-label="Resultado de Cotorra" className="bg-white w-full max-w-lg max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-200 flex items-center gap-3">
           <CalandriaMark className="w-7 h-8" light />
           <div className="flex-1">
             <h3 className="font-bold text-slate-900 text-sm">{result.type === 'reposicion' ? 'Pedido armado' : 'Mensajes listos'}</h3>
             <p className="text-[11px] text-slate-500">
-              {result.type === 'reposicion' ? 'Copialo o mandalo a cada proveedor.' : 'Vos elegís a quién mandarlo. Al cerrar se borran: Calandria no guarda nombres.'}
+              {result.type === 'reposicion' ? 'Copialo o mandalo a cada proveedor.' : 'Vos elegís a quién mandarlo. Al cerrar se borran: Cotorra no guarda nombres.'}
             </p>
           </div>
           <button type="button" onClick={clearResult} className="p-1.5 rounded hover:bg-slate-100 cursor-pointer" aria-label="Cerrar">

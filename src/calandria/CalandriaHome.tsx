@@ -3,10 +3,10 @@ import { Check, X, Share2, Printer, ArrowUpRight, ChevronRight } from 'lucide-re
 import { formatMinutes, useCalandria, CalandriaResult } from './CalandriaContext';
 import { CalandriaMark, KIND_LABEL } from './CalandriaUI';
 
-// Pantalla principal: la C de Calandria y nada más.
+// Pantalla principal: la C de Cotorra y nada más.
 // - Tocar la C (o el botón físico / F9) aprueba la primera notificación.
-// - Las notificaciones son las tareas que Calandria propone.
-// - Compartir e Imprimir sacan el resumen del día y lo que preparó Calandria.
+// - Las notificaciones son las tareas que Cotorra propone.
+// - Compartir e Imprimir sacan el resumen del día y lo que preparó Cotorra.
 // - "Abrir sistema" lleva al sistema completo (vender, cargar, etc.).
 
 export interface ResumenSeccion {
@@ -47,11 +47,11 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
   const f = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const fecha = f.charAt(0).toUpperCase() + f.slice(1);
 
-  // Lo que Calandria hizo hoy (sale del registro: sin datos de clientes).
+  // Lo que Cotorra hizo hoy (sale del registro: sin datos de clientes).
   const hoy = new Date().toDateString();
   const hechasHoy = c.log.filter((e) => e.action === 'aprobada' && new Date(e.at).toDateString() === hoy);
   const calandriaHoy: ResumenSeccion = {
-    titulo: 'Calandria hoy',
+    titulo: 'Cotorra hoy',
     lineas: hechasHoy.length
       ? [...hechasHoy.map((e) => `${KIND_LABEL[e.kind] || e.kind}: ${e.qty}`), `Tiempo ahorrado este mes: ${formatMinutes(c.minutesThisMonth)} (estimado)`]
       : ['Todavía no se aprobó ninguna tarea hoy.'],
@@ -70,7 +70,7 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
 
   const compartir = async () => {
     const secciones = armarSecciones();
-    const texto = [`${negocio} · ${fecha}`, '', ...secciones.flatMap((s) => [`*${s.titulo}*`, ...s.lineas.map((l) => `• ${l}`), '']), 'Calandria · una solución de tecnoros.ar'].join('\n');
+    const texto = [`${negocio} · ${fecha}`, '', ...secciones.flatMap((s) => [`*${s.titulo}*`, ...s.lineas.map((l) => `• ${l}`), '']), 'Cotorra · una solución de tecnoros.ar'].join('\n');
     const nav = navigator as Navigator & { share?: (d: { title?: string; text?: string }) => Promise<void> };
     if (nav.share) {
       try {
@@ -91,7 +91,7 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
       li{font-size:13px;margin:3px 0;white-space:pre-wrap}footer{margin-top:28px;font-size:11px;color:#64748B;border-top:1px solid #E2E8F0;padding-top:8px}</style></head>
       <body><h1>${escapar(negocio)}</h1><div class="f">${escapar(fecha)}</div>
       ${secciones.map((s) => `<h2>${escapar(s.titulo)}</h2><ul>${s.lineas.map((l) => `<li>${escapar(l)}</li>`).join('')}</ul>`).join('')}
-      <footer>Calandria · una solución de tecnoros.ar</footer></body></html>`;
+      <footer>Cotorra · una solución de tecnoros.ar</footer></body></html>`;
     // iframe oculto: imprime sin abrir otra pestaña
     const frame = document.createElement('iframe');
     frame.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0';
@@ -147,7 +147,7 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
           type="button"
           data-testid="calandria-c"
           onClick={() => (first && !c.paused ? c.approve(first) : undefined)}
-          aria-label={first ? `Aprobar: ${first.title}` : 'Calandria'}
+          aria-label={first ? `Aprobar: ${first.title}` : 'Cotorra'}
           className="relative mt-6 sm:mt-10 rounded-[2.5rem] p-5 transition-transform active:scale-95 cursor-pointer"
         >
           <span aria-hidden="true" className={`absolute inset-0 rounded-[2.5rem] ${anillo}`} />
@@ -199,7 +199,7 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
                 </div>
               </div>
             ))}
-          {c.paused && <p className="text-center text-xs text-slate-400">Calandria está en pausa. Tocá “ahorrados este mes” para reanudarla.</p>}
+          {c.paused && <p className="text-center text-xs text-slate-400">Cotorra está en pausa. Tocá “ahorrados este mes” para reanudarla.</p>}
         </section>
 
         {/* Informe de hoy: cada parte lleva a su detalle */}

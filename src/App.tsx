@@ -39,7 +39,7 @@ const KioskAppContent: React.FC = () => {
     setVista('sistema');
     kiosk.setActiveTab(tab);
   };
-  // Pantalla principal: la C de Calandria. "Abrir sistema" muestra el sistema completo.
+  // Pantalla principal: la C de Cotorra. "Abrir sistema" muestra el sistema completo.
   const [vista, setVistaState] = useState<'calandria' | 'sistema'>(() => {
     try {
       return localStorage.getItem('calandria_vista') === 'sistema' ? 'sistema' : 'calandria';
@@ -218,7 +218,7 @@ const KioskAppContent: React.FC = () => {
         </div>
       </footer>
 
-      {/* Calandria */}
+      {/* Cotorra */}
       <CalandriaPanel />
       <CalandriaLogModal />
       <CalandriaResultModal />

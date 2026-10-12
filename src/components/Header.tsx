@@ -18,7 +18,7 @@ import { CalandriaBrand } from "../calandria/CalandriaUI";
 
 interface HeaderProps {
   onOpenCashModal: () => void;
-  onGoHome?: () => void; // volver a la pantalla de la C
+  onGoHome?: () => void; // volver a la pantalla de la G
   onOpenQuickSaleModal?: () => void;
   onOpenSyncModal?: () => void;
   onOpenClearModal?: () => void;

@@ -1,7 +1,7 @@
 {
-  "name": "Cotorra",
-  "short_name": "Cotorra",
-  "description": "Cotorra para tu kiosco: tareas de siempre con un botón. Una solución de tecnoros.ar.",
+  "name": "Golondrina",
+  "short_name": "Golondrina",
+  "description": "Golondrina para tu kiosco: tareas de siempre con un botón. Una solución de tecnoros.ar.",
   "lang": "es-AR",
   "start_url": "/",
   "scope": "/",

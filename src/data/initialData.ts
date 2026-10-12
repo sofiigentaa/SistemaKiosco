@@ -617,7 +617,7 @@ export const generateSampleSales = (): Sale[] => {
       customerName: 'Roberto Sosa',
       status: 'completada',
     },
-    // Fiados viejos (para que Cotorra proponga los recordatorios en la demo)
+    // Fiados viejos (para que Golondrina proponga los recordatorios en la demo)
     {
       id: 'sale-090',
       date: getRelativeDate(9, 5, 0),
@@ -647,7 +647,7 @@ export const generateSampleSales = (): Sale[] => {
   ];
 };
 
-// Ingresos que se repiten (la demo muestra cómo Cotorra "aprende" el pedido
+// Ingresos que se repiten (la demo muestra cómo Golondrina "aprende" el pedido
 // semanal de gaseosas: 24 u. cada 7 días).
 export const generateSampleMovements = (): StockMovement[] => {
   return [28, 21, 14, 7].map((daysAgo, i) => ({

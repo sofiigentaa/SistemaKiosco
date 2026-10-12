@@ -1,4 +1,4 @@
-// Registro sellado de Cotorra.
+// Registro sellado de Golondrina.
 //
 // Cada acción queda como una línea con: número, fecha, tipo, qué se hizo,
 // cantidad y minutos ahorrados. NUNCA lleva datos personales (nombres,

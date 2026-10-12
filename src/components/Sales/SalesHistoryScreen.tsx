@@ -15,7 +15,7 @@ import { PrintSalesHistoryModal } from './PrintSalesHistoryModal';
 
 interface SalesHistoryScreenProps {
   onReprintReceipt?: (sale: Sale) => void;
-  initialMethod?: string; // p. ej. 'FIADO_PENDIENTE' cuando se llega desde el informe de la C
+  initialMethod?: string; // p. ej. 'FIADO_PENDIENTE' cuando se llega desde el informe de la G
 }
 
 export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = ({ initialMethod }) => {

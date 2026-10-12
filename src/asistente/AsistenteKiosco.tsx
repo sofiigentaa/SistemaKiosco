@@ -94,7 +94,7 @@ export const AsistenteKiosco: React.FC<{ onOpenCash: () => void; antesDeAccion?:
         const poco = k.lowStockProducts;
         if (sin.length + poco.length === 0) return { texto: 'Está todo bien de stock: ningún producto está en el mínimo.' };
         return {
-          texto: `Hay ${unir([[sin.length, 'sin stock'], [poco.length, 'en el mínimo']])}. Cotorra te arma el pedido por proveedor.`,
+          texto: `Hay ${unir([[sin.length, 'sin stock'], [poco.length, 'en el mínimo']])}. Golondrina te arma el pedido por proveedor.`,
           lineas: [...sin.map((p) => `${p.name}: sin stock`), ...poco.map((p) => `${p.name}: quedan ${p.stock} (mínimo ${p.minStock})`)].slice(0, 8),
           accion: { etiqueta: 'Ver alertas', hacer: ir('alerts') },
         };
@@ -203,7 +203,7 @@ export const AsistenteKiosco: React.FC<{ onOpenCash: () => void; antesDeAccion?:
         texto: 'Para liquidar lo que vence:',
         lineas: [
           'En "Alertas" están los productos por vencer, con un botón para aplicar descuento.',
-          'Cotorra también te lo propone sola: 20 % menos, nunca por debajo del costo.',
+          'Golondrina también te lo propone sola: 20 % menos, nunca por debajo del costo.',
         ],
         accion: { etiqueta: 'Ver alertas', hacer: ir('alerts') },
       }),
@@ -223,13 +223,13 @@ export const AsistenteKiosco: React.FC<{ onOpenCash: () => void; antesDeAccion?:
     },
     {
       id: 'calandria',
-      chip: '¿Qué hace Cotorra?',
-      palabras: ['cotorra', 'calandria', 'boton', 'automat', 'luz'],
+      chip: '¿Qué hace Golondrina?',
+      palabras: ['golondrina', 'calandria', 'boton', 'automat', 'luz'],
       responder: () => ({
-        texto: `Cotorra mira el stock, los vencimientos y los fiados y te propone las tareas de siempre. Vos aprobás con un botón (o F9).${
+        texto: `Golondrina mira el stock, los vencimientos y los fiados y te propone las tareas de siempre. Vos aprobás con un botón (o F9).${
           cal.suggestions.length ? `\nAhora tiene ${cal.suggestions.length} ${cal.suggestions.length === 1 ? 'tarea lista' : 'tareas listas'}.` : '\nAhora no tiene nada pendiente.'
         }`,
-        accion: { etiqueta: 'Abrir Cotorra', hacer: () => cal.setPanelOpen(true), enLugar: true },
+        accion: { etiqueta: 'Abrir Golondrina', hacer: () => cal.setPanelOpen(true), enLugar: true },
       }),
     },
     {
@@ -259,7 +259,7 @@ export const AsistenteKiosco: React.FC<{ onOpenCash: () => void; antesDeAccion?:
   return (
     <AsistenteChat
       temas={temas}
-      saludo="¡Hola! Soy el asistente de Cotorra. Preguntame cómo vas hoy o cómo se hace algo en el sistema."
+      saludo="¡Hola! Soy el asistente de Golondrina. Preguntame cómo vas hoy o cómo se hace algo en el sistema."
       soporteWhatsapp={SOPORTE}
       soporteMensaje={`Hola tecnoros.ar, necesito ayuda con el sistema de ${BRAND.first} ${BRAND.second}.`}
       colorBoton="bg-slate-900 hover:bg-slate-800 text-white ring-2 ring-cyan-400/60"

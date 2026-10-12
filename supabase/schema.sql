@@ -98,7 +98,7 @@ BEGIN
 END $$;
 
 -- ---------------------------------------------------------------------------
--- Cotorra: registro sellado de acciones.
+-- Golondrina: registro sellado de acciones.
 -- * Sin datos personales: solo tipo de tarea, acción, cantidad y minutos.
 -- * La base pone el número, la fecha y la huella (SHA-256 de la línea + la
 --   huella anterior). La app verifica la cadena con la misma fórmula.
@@ -129,7 +129,7 @@ DECLARE
 BEGIN
   NEW.owner := COALESCE(auth.uid(), NEW.owner);
   IF NEW.owner IS NULL THEN
-    RAISE EXCEPTION 'Cotorra: falta el usuario';
+    RAISE EXCEPTION 'Golondrina: falta el usuario';
   END IF;
   -- Una línea a la vez por cuenta, para que la cadena no se bifurque.
   PERFORM pg_advisory_xact_lock(hashtextextended('calandria:' || NEW.owner::TEXT, 0));
@@ -150,7 +150,7 @@ RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  RAISE EXCEPTION 'El registro de Cotorra no se puede modificar ni borrar';
+  RAISE EXCEPTION 'El registro de Golondrina no se puede modificar ni borrar';
 END;
 $$;
 

@@ -10,7 +10,7 @@ nada de lo que se escribe sale del navegador y no guarda la conversación.
 - ¿Cuánto sale…? / ¿Cuántos quedan de…? (busca el producto por nombre)
 
 **Cómo se hace**: vender, fiado, cargar productos, descuentos por vencimiento,
-abrir y cerrar la caja, y qué hace Cotorra. Cada respuesta trae un botón que
+abrir y cerrar la caja, y qué hace Golondrina. Cada respuesta trae un botón que
 lleva a la pantalla correspondiente.
 
 **Soporte**: "Hablar con soporte" abre WhatsApp con tecnoros.ar. El número se

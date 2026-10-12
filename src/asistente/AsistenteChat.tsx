@@ -10,7 +10,7 @@ import { MessageCircle, Send, X, ArrowRight, Mic, Square } from 'lucide-react';
 export interface Respuesta {
   texto: string;
   lineas?: string[];
-  // enLugar: la acción no necesita abrir el sistema completo (p. ej. soporte o Cotorra)
+  // enLugar: la acción no necesita abrir el sistema completo (p. ej. soporte o Golondrina)
   accion?: { etiqueta: string; hacer: () => void; enLugar?: boolean };
 }
 
@@ -63,7 +63,7 @@ interface Props {
   soporteMensaje: string;
   colorBoton?: string; // clases de Tailwind para el botón flotante
   posicion?: string; // clases de Tailwind para ubicar el botón
-  antesDeAccion?: () => void; // p. ej. pasar de la pantalla de la C al sistema completo
+  antesDeAccion?: () => void; // p. ej. pasar de la pantalla de la G al sistema completo
 }
 
 let siguienteId = 1;

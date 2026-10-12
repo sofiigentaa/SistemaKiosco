@@ -29,7 +29,7 @@ const KioskAppContent: React.FC = () => {
   } = useKiosk();
 
   const kiosk = useKiosk();
-  // Filtro con el que se abre el historial cuando se llega desde el informe de la C.
+  // Filtro con el que se abre el historial cuando se llega desde el informe de la G.
   const [salesFilter, setSalesFilter] = useState<string | undefined>(undefined);
   useEffect(() => {
     if (kiosk.activeTab !== 'sales') setSalesFilter(undefined);
@@ -39,7 +39,7 @@ const KioskAppContent: React.FC = () => {
     setVista('sistema');
     kiosk.setActiveTab(tab);
   };
-  // Pantalla principal: la C de Cotorra. "Abrir sistema" muestra el sistema completo.
+  // Pantalla principal: la G de Golondrina. "Abrir sistema" muestra el sistema completo.
   const [vista, setVistaState] = useState<'calandria' | 'sistema'>(() => {
     try {
       return localStorage.getItem('calandria_vista') === 'sistema' ? 'sistema' : 'calandria';
@@ -218,7 +218,7 @@ const KioskAppContent: React.FC = () => {
         </div>
       </footer>
 
-      {/* Cotorra */}
+      {/* Golondrina */}
       <CalandriaPanel />
       <CalandriaLogModal />
       <CalandriaResultModal />

@@ -52,6 +52,11 @@ Al entrar se ve solo la C de Calandria:
 - **Abrir sistema** (arriba a la derecha) lleva al sistema completo. Desde ahí, tocando
   el logo de Calandria se vuelve a la C. Cada equipo recuerda en qué pantalla quedó.
 - "X min ahorrados este mes" abre el panel con la pausa y el registro sellado.
+- **Hoy**: el informe del día en pantalla (lo mismo que se imprime). Cada parte tiene
+  "Ver" y lleva al detalle: por ejemplo, los eventos con saldo, los recordatorios de hoy,
+  lo que hay que reponer, los fiados o el registro de lo que hizo Calandria hoy.
+- La C dice "Todo en orden" solo si no hay nada para aprobar **ni** nada para revisar;
+  si quedan pendientes dice "Nada para aprobar · N cosas para revisar" (luz celeste).
 
 ## Asistente en la C, aprendizaje rápido y app
 

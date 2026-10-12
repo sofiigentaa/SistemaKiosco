@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { KioskProvider, useKiosk } from "./context/KioskContext";
 import { Header } from "./components/Header";
 import { PosScreen } from "./components/POS/PosScreen";
@@ -29,6 +29,16 @@ const KioskAppContent: React.FC = () => {
   } = useKiosk();
 
   const kiosk = useKiosk();
+  // Filtro con el que se abre el historial cuando se llega desde el informe de la C.
+  const [salesFilter, setSalesFilter] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    if (kiosk.activeTab !== 'sales') setSalesFilter(undefined);
+  }, [kiosk.activeTab]);
+  const abrir = (tab: 'sales' | 'alerts' | 'inventory' | 'reports', filtro?: string) => () => {
+    setSalesFilter(filtro);
+    setVista('sistema');
+    kiosk.setActiveTab(tab);
+  };
   // Pantalla principal: la C de Calandria. "Abrir sistema" muestra el sistema completo.
   const [vista, setVistaState] = useState<'calandria' | 'sistema'>(() => {
     try {
@@ -57,6 +67,7 @@ const KioskAppContent: React.FC = () => {
           `${k.todaySalesCount} ${k.todaySalesCount === 1 ? 'venta' : 'ventas'} por ${formatCurrency(k.todaySalesTotal)}`,
           `Ganancia: ${formatCurrency(k.todayProfitTotal)}`,
         ],
+        ver: abrir('sales', 'HOY'),
       },
     ];
     const sh = k.currentShift;
@@ -68,14 +79,31 @@ const KioskAppContent: React.FC = () => {
       const fiadosCobrados = k.sales
         .filter((x) => x.fiadoPaidMethod === 'Efectivo' && x.fiadoPaidAt && new Date(x.fiadoPaidAt).getTime() >= desde)
         .reduce((a, x) => a + x.total, 0);
-      out.push({ titulo: 'Caja', lineas: [`Tendría que haber ${formatCurrency(sh.initialCash + efectivo + fiadosCobrados)} en el cajón`] });
+      out.push({
+        titulo: 'Caja',
+        lineas: [`Tendría que haber ${formatCurrency(sh.initialCash + efectivo + fiadosCobrados)} en el cajón`],
+        ver: () => {
+          setVista('sistema');
+          setShowCashModal(true);
+        },
+      });
     }
     const reponer = [...k.outOfStockProducts, ...k.lowStockProducts];
-    out.push({ titulo: 'Para reponer', lineas: reponer.length ? reponer.slice(0, 10).map((p) => `${p.name}: quedan ${Math.max(p.stock, 0)}`) : ['Nada: todo bien de stock'] });
+    out.push({
+      titulo: 'Para reponer',
+      lineas: reponer.length ? reponer.slice(0, 10).map((p) => `${p.name}: quedan ${Math.max(p.stock, 0)}`) : ['Nada: todo bien de stock'],
+      pendientes: reponer.length,
+      ver: abrir('alerts'),
+    });
     const vencen = [...k.expiredProducts, ...k.expiringProducts];
-    if (vencen.length) out.push({ titulo: 'Vencidos o por vencer', lineas: vencen.slice(0, 10).map((p) => p.name) });
+    if (vencen.length) out.push({ titulo: 'Vencidos o por vencer', lineas: vencen.slice(0, 10).map((p) => p.name), pendientes: vencen.length, ver: abrir('alerts') });
     const fiados = k.sales.filter((x) => x.status === 'completada' && x.paymentMethod === 'Cuenta Corriente (Fiado)' && !x.fiadoPaidAt);
-    if (fiados.length) out.push({ titulo: 'Fiados sin cobrar', lineas: [`${formatCurrency(fiados.reduce((a, x) => a + x.total, 0))} en ${fiados.length} ${fiados.length === 1 ? 'venta' : 'ventas'}`] });
+    if (fiados.length)
+      out.push({
+        titulo: 'Fiados sin cobrar',
+        lineas: [`${formatCurrency(fiados.reduce((a, x) => a + x.total, 0))} en ${fiados.length} ${fiados.length === 1 ? 'venta' : 'ventas'}`],
+        ver: abrir('sales', 'FIADO_PENDIENTE'),
+      });
     return out;
   };
 
@@ -130,7 +158,7 @@ const KioskAppContent: React.FC = () => {
           />
         )}
         {activeTab === "sales" && (
-          <SalesHistoryScreen />
+          <SalesHistoryScreen key={salesFilter || 'todas'} initialMethod={salesFilter} />
         )}
         {activeTab === "reports" && (
           <ReportsScreen onGoToInventory={() => setActiveTab("inventory")} />

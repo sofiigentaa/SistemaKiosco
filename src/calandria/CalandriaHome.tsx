@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Check, X, Share2, Printer, ArrowUpRight } from 'lucide-react';
+import { Check, X, Share2, Printer, ArrowUpRight, ChevronRight } from 'lucide-react';
 import { formatMinutes, useCalandria, CalandriaResult } from './CalandriaContext';
 import { CalandriaMark, KIND_LABEL } from './CalandriaUI';
 
@@ -12,6 +12,8 @@ import { CalandriaMark, KIND_LABEL } from './CalandriaUI';
 export interface ResumenSeccion {
   titulo: string;
   lineas: string[];
+  pendientes?: number; // cuántas cosas para revisar (eventos con saldo, tareas de hoy, productos a reponer…)
+  ver?: () => void; // lleva a la pantalla donde se ven en detalle
 }
 
 interface Props {
@@ -55,7 +57,16 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
       : ['Todavía no se aprobó ninguna tarea hoy.'],
   };
 
+  calandriaHoy.ver = () => {
+    c.refreshLog();
+    c.setLogOpen(true);
+  };
+
   const armarSecciones = () => [...resumen(), calandriaHoy, ...seccionesPreparadas(c.lastResult)];
+
+  // Informe en pantalla: lo mismo que se imprime, pero cada parte lleva a su detalle.
+  const informe = [...resumen(), calandriaHoy];
+  const totalPendientes = informe.reduce((a, x) => a + (x.pendientes || 0), 0);
 
   const compartir = async () => {
     const secciones = armarSecciones();
@@ -97,12 +108,21 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
     }, 200);
   };
 
-  const estado = c.paused ? 'En pausa' : first ? 'Tocá la C para aprobar la primera' : 'Todo en orden';
+  // "Todo en orden" solo si no hay nada para aprobar NI nada pendiente para revisar.
+  const estado = c.paused
+    ? 'En pausa'
+    : first
+      ? 'Tocá la C para aprobar la primera'
+      : totalPendientes > 0
+        ? `Nada para aprobar · ${totalPendientes} ${totalPendientes === 1 ? 'cosa' : 'cosas'} para revisar abajo`
+        : 'Todo en orden';
   const anillo = c.paused
     ? 'shadow-[0_0_0_10px_rgba(148,163,184,0.15)]'
     : first
       ? 'shadow-[0_0_0_10px_rgba(251,191,36,0.25),0_0_60px_rgba(251,191,36,0.35)] animate-[cal-pulso_2.2s_ease-in-out_infinite] motion-reduce:animate-none'
-      : 'shadow-[0_0_0_10px_rgba(52,211,153,0.18),0_0_60px_rgba(34,211,238,0.25)]';
+      : totalPendientes > 0
+        ? 'shadow-[0_0_0_10px_rgba(34,211,238,0.22),0_0_60px_rgba(34,211,238,0.3)]'
+        : 'shadow-[0_0_0_10px_rgba(52,211,153,0.18),0_0_60px_rgba(34,211,238,0.25)]';
 
   return (
     <div
@@ -180,6 +200,39 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
               </div>
             ))}
           {c.paused && <p className="text-center text-xs text-slate-400">Calandria está en pausa. Tocá “ahorrados este mes” para reanudarla.</p>}
+        </section>
+
+        {/* Informe de hoy: cada parte lleva a su detalle */}
+        <section className="w-full mt-7" aria-label="Hoy" data-testid="calandria-informe">
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Hoy</h2>
+          <div className="rounded-2xl border border-white/10 bg-white/5 divide-y divide-white/10 overflow-hidden">
+            {informe.map((sec) => (
+              <button
+                key={sec.titulo}
+                type="button"
+                onClick={sec.ver}
+                disabled={!sec.ver}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/5 disabled:hover:bg-transparent cursor-pointer disabled:cursor-default"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-sm font-bold">
+                    {sec.titulo}
+                    {!!sec.pendientes && (
+                      <span className="min-w-5 h-5 px-1.5 rounded-full bg-cyan-400 text-slate-900 text-[11px] font-black flex items-center justify-center">
+                        {sec.pendientes}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-300 truncate">{sec.lineas.slice(0, 2).join(' · ')}</div>
+                </div>
+                {sec.ver && (
+                  <span className="shrink-0 flex items-center text-xs font-semibold text-cyan-300">
+                    Ver <ChevronRight className="w-4 h-4" />
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
         </section>
 
         <div className="w-full mt-6 grid grid-cols-2 gap-3">

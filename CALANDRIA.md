@@ -48,7 +48,7 @@ Al entrar se ve solo la C de Calandria:
 - **Notificaciones**: cada tarea que propone Calandria, con ✓ (aprobar) y ✕ (ahora no).
 - **Compartir** (WhatsApp o lo que ofrezca el celular) e **Imprimir**: el resumen del
   día, lo que Calandria hizo hoy y lo último que preparó (pedido o mensajes).
-- Abajo: **tecnoros.ar**.
+- Abajo: **una solución de tecnoros.ar**.
 - **Abrir sistema** (arriba a la derecha) lleva al sistema completo. Desde ahí, tocando
   el logo de Calandria se vuelve a la C. Cada equipo recuerda en qué pantalla quedó.
 - "X min ahorrados este mes" abre el panel con la pausa y el registro sellado.

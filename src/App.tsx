@@ -13,6 +13,7 @@ import { signOut } from "./lib/supabase";
 import { CalandriaProvider } from "./calandria/CalandriaContext";
 import { CalandriaPanel, CalandriaLogModal, CalandriaResultModal, CalandriaToast } from "./calandria/CalandriaUI";
 import { BRAND } from "./config/brand";
+import { AsistenteKiosco } from "./asistente/AsistenteKiosco";
 
 const KioskAppContent: React.FC = () => {
   const { 
@@ -127,6 +128,7 @@ const KioskAppContent: React.FC = () => {
       <CalandriaLogModal />
       <CalandriaResultModal />
       <CalandriaToast />
+      <AsistenteKiosco onOpenCash={() => setShowCashModal(true)} />
 
       {/* MODALS */}
       <CashRegisterModal

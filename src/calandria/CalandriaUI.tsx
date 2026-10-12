@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { CheckCircle2, Copy, Download, FileText, Pause, Play, ShieldAlert, ShieldCheck, X, Clock, MessageCircle } from 'lucide-react';
+import { CheckCircle2, Copy, Pause, Play, ShieldAlert, ShieldCheck, X, Clock, MessageCircle } from 'lucide-react';
 import { formatMinutes, useCalandria } from './CalandriaContext';
 import { CalandriaKind } from './chain';
-import { download, toCsv } from './logStore';
 
 // Logo de Calandria: la C de circuito dentro del escudo (misma familia que TERO).
 export const CalandriaMark: React.FC<{ className?: string; light?: boolean }> = ({ className, light }) => (
@@ -215,7 +214,6 @@ export const CalandriaLogModal: React.FC = () => {
   const c = useCalandria();
   if (!c.logOpen) return null;
   const entries = [...c.log].reverse();
-  const stamp = new Date().toISOString().slice(0, 10);
 
   return (
     <div className="fixed inset-0 z-[60] bg-slate-950/70 flex items-center justify-center p-3" onClick={() => c.setLogOpen(false)}>
@@ -296,28 +294,6 @@ export const CalandriaLogModal: React.FC = () => {
           </table>
         </div>
 
-        <div className="px-4 py-3 border-t border-slate-200 flex flex-wrap gap-2 justify-end">
-          <button
-            type="button"
-            onClick={() => download(`calandria-registro-${stamp}.csv`, toCsv(c.log), 'text/csv;charset=utf-8')}
-            className="flex items-center gap-1.5 rounded-md border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
-          >
-            <FileText className="w-3.5 h-3.5" /> Exportar CSV
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              download(
-                `calandria-registro-${stamp}.json`,
-                JSON.stringify({ formula: 'sha256(numero|fecha|tipo|accion|cantidad|minutos|huella_anterior)', entries: c.log }, null, 2),
-                'application/json'
-              )
-            }
-            className="flex items-center gap-1.5 rounded-md bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800 cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" /> Exportar para auditoría
-          </button>
-        </div>
       </div>
     </div>
   );

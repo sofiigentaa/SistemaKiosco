@@ -94,21 +94,3 @@ async function doFlush(userId: string): Promise<boolean> {
     write(pendingKey(userId), readPending(userId).filter((x) => x.localId !== p.localId));
   }
 }
-
-export function toCsv(entries: LogEntry[]): string {
-  const head = 'numero;fecha_utc;tipo;accion;cantidad;minutos_estimados;huella_anterior;huella';
-  const rows = entries.map((e) => [e.seq, e.at, e.kind, e.action, e.qty, e.minutes, e.prev_hash, e.hash].join(';'));
-  return [head, ...rows].join('\n');
-}
-
-export function download(filename: string, content: string, type: string) {
-  const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}

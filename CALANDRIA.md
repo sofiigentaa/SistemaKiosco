@@ -37,6 +37,5 @@ Si alguien cambia o borra una línea del medio, la verificación lo marca.
 - En la nube (Supabase), la base pone el número, la fecha y la huella, y **no deja
   modificar ni borrar** líneas (tabla `kiosk_calandria_log` en `supabase/schema.sql`).
 - Sin internet, la acción queda "pendiente de sellar" en el equipo y se sube sola.
-- "Exportar para auditoría" baja el registro completo en JSON (con la fórmula) o CSV.
-  Conviene exportarlo una vez por mes y guardarlo: así también queda constancia
-  de cuántas líneas había.
+- El registro se ve en pantalla (con la verificación). Para una auditoría,
+  tecnoros.ar lo saca directo de la base de datos; el cliente no tiene que hacer nada.

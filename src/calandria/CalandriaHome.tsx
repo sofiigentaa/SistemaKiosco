@@ -91,7 +91,7 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
       li{font-size:13px;margin:3px 0;white-space:pre-wrap}footer{margin-top:28px;font-size:11px;color:#64748B;border-top:1px solid #E2E8F0;padding-top:8px}</style></head>
       <body><h1>${escapar(negocio)}</h1><div class="f">${escapar(fecha)}</div>
       ${secciones.map((s) => `<h2>${escapar(s.titulo)}</h2><ul>${s.lineas.map((l) => `<li>${escapar(l)}</li>`).join('')}</ul>`).join('')}
-      <footer>Golondrina · una solución de tecnoros.ar</footer></body></html>`;
+      <footer>Golondrina · una solución de tecnoros<span style="color:#06B6D4">.ar</span></footer></body></html>`;
     // iframe oculto: imprime sin abrir otra pestaña
     const frame = document.createElement('iframe');
     frame.style.cssText = 'position:fixed;width:0;height:0;border:0;right:0;bottom:0';

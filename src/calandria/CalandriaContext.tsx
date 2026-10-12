@@ -36,6 +36,8 @@ interface CalandriaContextType {
 const Ctx = createContext<CalandriaContextType | null>(null);
 
 const SNOOZE_MS = 12 * 60 * 60 * 1000;
+// Lo aprobado no vuelve a aparecer igual (si cambia algo, la propuesta cambia de clave y aparece de nuevo).
+const DONE_MS = 3 * 24 * 60 * 60 * 1000;
 
 function readJson<T>(k: string, fallback: T): T {
   try {
@@ -125,6 +127,21 @@ export const CalandriaProvider: React.FC<{ children: React.ReactNode; userId?: s
     toastTimer.current = setTimeout(() => setToast(null), 3500);
   };
 
+  // Esconde una propuesta por un tiempo (functional update: sirve aunque se llame varias veces seguidas).
+  const markSnoozed = useCallback(
+    (key: string, ms: number) => {
+      setSnoozed((prev) => {
+        const now = Date.now();
+        const next: Record<string, number> = { ...prev, [key]: now + ms };
+        Object.keys(next).forEach((k) => next[k] < now && delete next[k]);
+        writeJson(`${prefsKey}_snooze`, next);
+        return next;
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
   const suggestions = useMemo(() => {
     if (paused) return [];
     const now = Date.now();
@@ -144,7 +161,7 @@ export const CalandriaProvider: React.FC<{ children: React.ReactNode; userId?: s
           type: 'reposicion',
           bySupplier: p.bySupplier.map((g) => ({
             supplier: g.supplier,
-            text: `Hola! Te paso el pedido de ${brandName}:\n${g.items.map((i) => `• ${i.qty} ${i.unit || 'u.'} de ${i.name}`).join('\n')}\nGracias!`,
+            text: `Hola! Te paso el pedido de ${brandName}:\n${g.items.map((i) => `• ${i.qty} × ${i.name}`).join('\n')}\nGracias!`,
           })),
         });
       } else if (p.type === 'fiados') {
@@ -164,22 +181,19 @@ export const CalandriaProvider: React.FC<{ children: React.ReactNode; userId?: s
           }),
         });
       }
+      markSnoozed(s.key, DONE_MS);
       record(s.kind, 'aprobada', s.qty, s.minutes);
       showToast(`Listo. Calandria te ahorró ~${s.minutes} min.`);
     },
-    [restockProduct, updateProduct, record, brandName, sales]
+    [restockProduct, updateProduct, record, brandName, sales, markSnoozed]
   );
 
   const dismiss = useCallback(
     (s: Suggestion) => {
-      const next = { ...snoozed, [s.key]: Date.now() + SNOOZE_MS };
-      // limpiar los vencidos
-      Object.keys(next).forEach((k) => next[k] < Date.now() && delete next[k]);
-      setSnoozed(next);
-      writeJson(`${prefsKey}_snooze`, next);
+      markSnoozed(s.key, SNOOZE_MS);
       record(s.kind, 'descartada', s.qty, 0);
     },
-    [snoozed, prefsKey, record]
+    [markSnoozed, record]
   );
 
   const togglePause = useCallback(() => {

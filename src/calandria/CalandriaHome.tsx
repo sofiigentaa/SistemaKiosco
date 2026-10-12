@@ -70,7 +70,7 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
 
   const compartir = async () => {
     const secciones = armarSecciones();
-    const texto = [`${negocio} · ${fecha}`, '', ...secciones.flatMap((s) => [`*${s.titulo}*`, ...s.lineas.map((l) => `• ${l}`), '']), 'Calandria · tecnoros.ar'].join('\n');
+    const texto = [`${negocio} · ${fecha}`, '', ...secciones.flatMap((s) => [`*${s.titulo}*`, ...s.lineas.map((l) => `• ${l}`), '']), 'Calandria · una solución de tecnoros.ar'].join('\n');
     const nav = navigator as Navigator & { share?: (d: { title?: string; text?: string }) => Promise<void> };
     if (nav.share) {
       try {
@@ -254,8 +254,8 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
       </main>
 
       <footer className="pt-6 pb-24 sm:pb-8 text-center">
-        <a href="https://tecnoros-ar.onrender.com" target="_blank" rel="noopener noreferrer" className="text-sm font-bold tracking-wide text-slate-300 hover:text-white">
-          tecnoros<span className="text-cyan-400">.ar</span>
+        <a href="https://tecnoros-ar.onrender.com" target="_blank" rel="noopener noreferrer" className="text-sm tracking-wide text-slate-400 hover:text-white">
+          una solución de <span className="font-bold text-slate-300">tecnoros<span className="text-cyan-400">.ar</span></span>
         </a>
       </footer>
     </div>

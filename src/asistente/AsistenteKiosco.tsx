@@ -233,6 +233,15 @@ export const AsistenteKiosco: React.FC<{ onOpenCash: () => void }> = ({ onOpenCa
       }),
     },
     {
+      id: 'saludo',
+      palabras: ['hola', 'buen dia', 'buenas', 'gracias', 'que podes hacer', 'ayudame'],
+      responder: (q) => ({
+        texto: q.includes('gracias')
+          ? '¡De nada! Cualquier cosa, acá estoy.'
+          : 'Puedo decirte cómo vas y explicarte cómo se hace algo. Probá con "¿Cuánto vendí hoy?", "¿Qué tengo que reponer?" o "¿Cómo vendo fiado?", o tocá uno de los botones de abajo.',
+      }),
+    },
+    {
       id: 'soporte',
       chip: 'Hablar con una persona',
       palabras: ['soporte', 'persona', 'humano', 'ayuda', 'problema', 'error', 'no anda', 'no funciona', 'falla'],
@@ -249,10 +258,10 @@ export const AsistenteKiosco: React.FC<{ onOpenCash: () => void }> = ({ onOpenCa
   return (
     <AsistenteChat
       temas={temas}
-      saludo={`¡Hola! Soy el asistente de ${BRAND.first} ${BRAND.second}. Preguntame cómo vas hoy o cómo se hace algo en el sistema.`}
+      saludo="¡Hola! Soy el asistente de Calandria. Preguntame cómo vas hoy o cómo se hace algo en el sistema."
       soporteWhatsapp={SOPORTE}
       soporteMensaje={`Hola tecnoros.ar, necesito ayuda con el sistema de ${BRAND.first} ${BRAND.second}.`}
-      colorBoton="bg-indigo-600 hover:bg-indigo-700 text-white"
+      colorBoton="bg-slate-900 hover:bg-slate-800 text-white ring-2 ring-cyan-400/60"
       posicion="bottom-20 right-4 lg:bottom-14 lg:right-6"
     />
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { 
   ShoppingCart, 
   Package, 
@@ -13,9 +13,8 @@ import {
   Trash2
 } from "lucide-react";
 import { useKiosk } from "../context/KioskContext";
-import { BRAND } from '../config/brand';
 import { formatCurrency } from "../utils/formatters";
-import { CalandriaHeaderButton } from "../calandria/CalandriaUI";
+import { CalandriaBrand } from "../calandria/CalandriaUI";
 
 interface HeaderProps {
   onOpenCashModal: () => void;
@@ -37,20 +36,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModa
     cloudEnabled,
     cloudSyncStatus,
   } = useKiosk();
-
-  const [time, setTime] = useState<string>("");
-  const [dateStr, setDateStr] = useState<string>("");
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setTime(now.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
-      setDateStr(now.toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short", year: "numeric" }));
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
   interface NavItem {
     id: "pos" | "inventory" | "alerts" | "sales" | "reports";
@@ -84,10 +69,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModa
           <div className="flex items-center gap-2.5">
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-sm sm:text-base tracking-tight text-white flex flex-col sm:flex-row sm:items-center sm:gap-1.5 leading-tight">
-                  <span>{BRAND.first}</span>
-                  <span className="text-emerald-400 font-semibold">{BRAND.second}</span>
-                </span>
+                <CalandriaBrand />
 
                 {/* Supabase Cloud Sync Indicator (informational only, no click action) */}
                 <span
@@ -114,11 +96,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModa
                   </span>
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 hidden sm:flex items-center gap-1.5 capitalize">
-                <span>{dateStr || "Hoy"}</span>
-                <span className="text-slate-600">•</span>
-                <span className="font-mono text-slate-300">{time || "--:--:--"}</span>
-              </p>
             </div>
           </div>
 
@@ -147,7 +124,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModa
 
           {/* Quick Metrics & Actions */}
           <div className="flex items-center gap-2">
-            <CalandriaHeaderButton />
             {/* Sales of Day summary */}
             <div className="hidden lg:flex items-center gap-2 bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-xs">
               <div className="text-right">

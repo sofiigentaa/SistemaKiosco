@@ -35,30 +35,37 @@ const Light: React.FC<{ className?: string }> = ({ className = 'w-2.5 h-2.5' }) 
   return <span className={`${className} rounded-full inline-block ${color}`} aria-hidden="true" />;
 };
 
-export const CalandriaHeaderButton: React.FC = () => {
+// Marca del sistema: el logo de Calandria arriba a la izquierda. Tocarlo abre el panel.
+export const CalandriaBrand: React.FC<{ onDark?: boolean }> = ({ onDark = true }) => {
   const { suggestions, setPanelOpen, minutesThisMonth, paused } = useCalandria();
+  const estado = paused
+    ? 'En pausa'
+    : suggestions.length > 0
+      ? `${suggestions.length} ${suggestions.length === 1 ? 'tarea para aprobar' : 'tareas para aprobar'}`
+      : `${formatMinutes(minutesThisMonth)} ahorrados este mes`;
   return (
     <button
       id="calandria-btn"
       type="button"
       onClick={() => setPanelOpen(true)}
-      className="relative flex items-center gap-2 rounded-lg border border-cyan-400/40 bg-slate-950/60 hover:bg-slate-800 px-2 py-1 text-xs transition-colors cursor-pointer"
+      className={`relative flex items-center gap-2.5 rounded-xl pr-2 py-1 text-left transition-colors cursor-pointer ${onDark ? 'hover:bg-white/5' : 'hover:bg-slate-100'}`}
       title="Calandria: tareas para aprobar con un botón"
     >
-      <CalandriaMark className="w-6 h-7" />
-      <span className="hidden sm:flex flex-col items-start leading-tight">
-        <span className="font-bold text-white flex items-center gap-1.5">
-          Calandria <Light className="w-2 h-2" />
+      <CalandriaMark className="w-8 h-9 sm:w-9 sm:h-10 shrink-0" />
+      <span className="flex flex-col leading-tight">
+        <span className={`flex items-center gap-1.5 font-bold text-base sm:text-lg tracking-tight ${onDark ? 'text-white' : 'text-slate-900'}`}>
+          Calandria
+          {suggestions.length > 0 && (
+            <span className="min-w-5 h-5 px-1 rounded-full bg-amber-400 text-slate-900 text-[11px] font-black flex items-center justify-center" aria-label={`${suggestions.length} tareas para aprobar`}>
+              {suggestions.length}
+            </span>
+          )}
         </span>
-        <span className="text-[10px] text-cyan-300 font-semibold">
-          {paused ? 'En pausa' : `${formatMinutes(minutesThisMonth)} ahorrados`}
+        <span className={`hidden sm:flex items-center gap-1.5 text-[11px] font-semibold ${onDark ? 'text-cyan-300' : 'text-cyan-700'}`}>
+          <Light className="w-2 h-2" />
+          {estado}
         </span>
       </span>
-      {suggestions.length > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-amber-400 text-slate-900 text-[11px] font-black flex items-center justify-center">
-          {suggestions.length}
-        </span>
-      )}
     </button>
   );
 };

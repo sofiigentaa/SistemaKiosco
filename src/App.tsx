@@ -75,7 +75,7 @@ const KioskAppContent: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${cloudEnabled ? (cloudSyncStatus === 'error' ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-slate-400'}`}></span>
-            <span className="font-semibold text-slate-700">KioscoManager Pro</span>
+            <span>una solución de <a href="https://tecnoros-ar.onrender.com" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 hover:text-cyan-700">tecnoros.ar</a></span>
             <span className="text-slate-300">•</span>
             <span className="text-slate-500">
               {cloudEnabled

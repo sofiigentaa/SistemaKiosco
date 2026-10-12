@@ -52,3 +52,13 @@ Al entrar se ve solo la C de Calandria:
 - **Abrir sistema** (arriba a la derecha) lleva al sistema completo. Desde ahí, tocando
   el logo de Calandria se vuelve a la C. Cada equipo recuerda en qué pantalla quedó.
 - "X min ahorrados este mes" abre el panel con la pausa y el registro sellado.
+
+## Asistente en la C, aprendizaje rápido y app
+
+- El asistente también está en la pantalla de la C. Si una respuesta lleva a una
+  pantalla del sistema (vender, cargar un evento, la caja…), abre el sistema ahí.
+- Aprende rápido: con **2 veces** que se repita algo (mismo ingreso de mercadería,
+  mismo gasto del mes) ya lo propone. Las tareas por reglas (vencimientos, stock
+  mínimo, saldos, fiados) funcionan desde el primer día, con los datos que ya hay.
+- Se instala como **aplicación** en el celular o la compu ("Agregar a la pantalla de
+  inicio" / "Instalar"), con el nombre y el ícono de Calandria.

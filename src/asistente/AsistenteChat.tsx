@@ -10,7 +10,8 @@ import { MessageCircle, Send, X, ArrowRight } from 'lucide-react';
 export interface Respuesta {
   texto: string;
   lineas?: string[];
-  accion?: { etiqueta: string; hacer: () => void };
+  // enLugar: la acción no necesita abrir el sistema completo (p. ej. soporte o Calandria)
+  accion?: { etiqueta: string; hacer: () => void; enLugar?: boolean };
 }
 
 export interface Tema {
@@ -62,6 +63,7 @@ interface Props {
   soporteMensaje: string;
   colorBoton?: string; // clases de Tailwind para el botón flotante
   posicion?: string; // clases de Tailwind para ubicar el botón
+  antesDeAccion?: () => void; // p. ej. pasar de la pantalla de la C al sistema completo
 }
 
 let siguienteId = 1;
@@ -73,6 +75,7 @@ export const AsistenteChat: React.FC<Props> = ({
   soporteMensaje,
   colorBoton = 'bg-slate-900 hover:bg-slate-800 text-white',
   posicion = 'bottom-5 right-5',
+  antesDeAccion,
 }) => {
   const [abierto, setAbierto] = useState(false);
   const [texto, setTexto] = useState('');
@@ -158,6 +161,7 @@ export const AsistenteChat: React.FC<Props> = ({
                       <button
                         type="button"
                         onClick={() => {
+                          if (!m.r.accion!.enLugar) antesDeAccion?.();
                           m.r.accion!.hacer();
                           setAbierto(false);
                         }}

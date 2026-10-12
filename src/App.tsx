@@ -87,6 +87,7 @@ const KioskAppContent: React.FC = () => {
     return (
       <>
         <CalandriaHome negocio={`${BRAND.first} ${BRAND.second}`} resumen={resumen} onOpenSystem={() => setVista('sistema')} />
+        <AsistenteKiosco onOpenCash={() => setShowCashModal(true)} antesDeAccion={() => setVista('sistema')} posicion="bottom-5 right-4 sm:right-6" />
         <CalandriaPanel />
         <CalandriaLogModal />
         <CalandriaResultModal />

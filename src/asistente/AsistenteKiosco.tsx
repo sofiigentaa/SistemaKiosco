@@ -15,7 +15,7 @@ const unir = (partes: Array<[number, string]>) => {
   return p.length > 1 ? `${p.slice(0, -1).join(', ')} y ${p[p.length - 1]}` : p[0] || '';
 };
 
-export const AsistenteKiosco: React.FC<{ onOpenCash: () => void }> = ({ onOpenCash }) => {
+export const AsistenteKiosco: React.FC<{ onOpenCash: () => void; antesDeAccion?: () => void; posicion?: string }> = ({ onOpenCash, antesDeAccion, posicion }) => {
   const k = useKiosk();
   const cal = useCalandria();
   const ir = (tab: Parameters<typeof k.setActiveTab>[0]) => () => k.setActiveTab(tab);
@@ -229,7 +229,7 @@ export const AsistenteKiosco: React.FC<{ onOpenCash: () => void }> = ({ onOpenCa
         texto: `Calandria mira el stock, los vencimientos y los fiados y te propone las tareas de siempre. Vos aprobás con un botón (o F9).${
           cal.suggestions.length ? `\nAhora tiene ${cal.suggestions.length} ${cal.suggestions.length === 1 ? 'tarea lista' : 'tareas listas'}.` : '\nAhora no tiene nada pendiente.'
         }`,
-        accion: { etiqueta: 'Abrir Calandria', hacer: () => cal.setPanelOpen(true) },
+        accion: { etiqueta: 'Abrir Calandria', hacer: () => cal.setPanelOpen(true), enLugar: true },
       }),
     },
     {
@@ -248,6 +248,7 @@ export const AsistenteKiosco: React.FC<{ onOpenCash: () => void }> = ({ onOpenCa
       responder: () => ({
         texto: 'Te atiende el equipo de tecnoros.ar por WhatsApp. Contanos qué pasó y en qué pantalla.',
         accion: {
+          enLugar: true,
           etiqueta: 'Escribir a soporte',
           hacer: () => window.open(`https://wa.me/${SOPORTE}?text=${encodeURIComponent(`Hola tecnoros.ar, necesito ayuda con el sistema de ${BRAND.first} ${BRAND.second}.`)}`, '_blank', 'noopener'),
         },
@@ -262,7 +263,8 @@ export const AsistenteKiosco: React.FC<{ onOpenCash: () => void }> = ({ onOpenCa
       soporteWhatsapp={SOPORTE}
       soporteMensaje={`Hola tecnoros.ar, necesito ayuda con el sistema de ${BRAND.first} ${BRAND.second}.`}
       colorBoton="bg-slate-900 hover:bg-slate-800 text-white ring-2 ring-cyan-400/60"
-      posicion="bottom-20 right-4 lg:bottom-14 lg:right-6"
+      posicion={posicion || "bottom-20 right-4 lg:bottom-14 lg:right-6"}
+      antesDeAccion={antesDeAccion}
     />
   );
 };

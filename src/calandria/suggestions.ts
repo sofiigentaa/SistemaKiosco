@@ -70,22 +70,26 @@ function ingresosHabituales(products: Product[], movements: StockMovement[], now
   const out: Suggestion[] = [];
   for (const [productId, list] of byProduct) {
     const product = products.find((p) => p.id === productId);
-    if (!product || list.length < 3) continue;
+    // Con 2 ingresos iguales ya alcanza para proponer (lo más rápido posible);
+    // con 3 o más, además se pide que sean regulares.
+    if (!product || list.length < 2) continue;
     const sorted = [...list].sort((a, b) => a.date.localeCompare(b.date));
-    const last3 = sorted.slice(-3);
-    const quantity = last3[2].quantityChange;
-    if (!last3.every((m) => m.quantityChange === quantity)) continue;
-    const gaps = [1, 2].map((i) => new Date(last3[i].date).getTime() - new Date(last3[i - 1].date).getTime());
-    const every = (gaps[0] + gaps[1]) / 2;
-    if (every < DAY / 2 || Math.abs(gaps[0] - gaps[1]) > every * 0.35) continue; // no es regular
-    const since = now - new Date(last3[2].date).getTime();
+    const recent = sorted.slice(-3);
+    const last = recent[recent.length - 1];
+    const quantity = last.quantityChange;
+    if (!recent.every((m) => m.quantityChange === quantity)) continue;
+    const gaps = recent.slice(1).map((m, i) => new Date(m.date).getTime() - new Date(recent[i].date).getTime());
+    const every = gaps.reduce((a, g) => a + g, 0) / gaps.length;
+    if (every < DAY / 2) continue;
+    if (gaps.length === 2 && Math.abs(gaps[0] - gaps[1]) > every * 0.35) continue; // no es regular
+    const since = now - new Date(last.date).getTime();
     if (since < every * 0.85) continue; // todavía no toca
     const days = Math.round(every / DAY);
     out.push({
-      key: `ingreso_habitual:${productId}:${last3[2].id}`,
+      key: `ingreso_habitual:${productId}:${last.id}`,
       kind: 'ingreso_habitual',
       title: `Cargar el ingreso habitual de ${product.name}`,
-      detail: `Aprendí que cada ${plural(days, 'día', 'días')} entran ${quantity} ${(product.unit || 'u.').replace(/\.$/, '')}. Si ya llegó, lo cargo al stock con un toque.`,
+      detail: `Lo vi ${list.length} veces: cada ${plural(days, 'día', 'días')} entran ${quantity} ${(product.unit || 'u.').replace(/\.$/, '')}. Si ya llegó, lo cargo al stock con un toque.`,
       lines: [`${product.name}: ${product.stock} → ${product.stock + quantity} en stock`],
       qty: quantity,
       minutes: 2,

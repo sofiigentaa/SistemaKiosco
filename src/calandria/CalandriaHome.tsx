@@ -200,7 +200,7 @@ export const CalandriaHome: React.FC<Props> = ({ negocio, resumen, onOpenSystem 
         </div>
       </main>
 
-      <footer className="py-6 text-center">
+      <footer className="pt-6 pb-24 sm:pb-8 text-center">
         <a href="https://tecnoros-ar.onrender.com" target="_blank" rel="noopener noreferrer" className="text-sm font-bold tracking-wide text-slate-300 hover:text-white">
           tecnoros<span className="text-cyan-400">.ar</span>
         </a>

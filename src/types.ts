@@ -52,6 +52,9 @@ export interface Sale {
   customerName?: string;
   status: 'completada' | 'anulada';
   note?: string;
+  // Fiado cobrado después: cuándo y con qué medio
+  fiadoPaidAt?: string;
+  fiadoPaidMethod?: Exclude<PaymentMethod, 'Cuenta Corriente (Fiado)'>;
 }
 
 export interface StockMovement {

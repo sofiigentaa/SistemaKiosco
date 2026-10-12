@@ -9,7 +9,7 @@ interface CashRegisterModalProps {
 }
 
 export const CashRegisterModal: React.FC<CashRegisterModalProps> = ({ isOpen, onClose }) => {
-  const { currentShift, openShift, closeShift, sales } = useKiosk();
+  const { currentShift, openShift, closeShift, sales, closedShifts } = useKiosk();
 
   const [initialCashInput, setInitialCashInput] = useState<number | ''>(15000);
   const [realCashInput, setRealCashInput] = useState<number | ''>('');
@@ -46,8 +46,18 @@ export const CashRegisterModal: React.FC<CashRegisterModalProps> = ({ isOpen, on
   const totalShiftProfit = shiftSales.reduce((a, s) => a + s.totalProfit, 0);
   const averageTicket = shiftSales.length > 0 ? Math.round(totalShiftRevenue / shiftSales.length) : 0;
 
+  // Fiados de turnos anteriores que se cobraron en efectivo durante este turno
+  const shiftEndTime = currentShift?.closedAt ? new Date(currentShift.closedAt).getTime() : Date.now();
+  const cashFiadosCollected = sales
+    .filter((s) => s.status === 'completada' && s.fiadoPaidMethod === 'Efectivo' && s.fiadoPaidAt)
+    .filter((s) => {
+      const t = new Date(s.fiadoPaidAt as string).getTime();
+      return t >= shiftStartTime && t <= shiftEndTime;
+    })
+    .reduce((a, s) => a + s.total, 0);
+
   const initialFloat = currentShift?.initialCash || 0;
-  const expectedCashInDrawer = initialFloat + cashSales;
+  const expectedCashInDrawer = initialFloat + cashSales + cashFiadosCollected;
   const actualCashCounted = typeof realCashInput === 'number' 
     ? realCashInput 
     : (currentShift?.finalCashReal !== undefined ? currentShift.finalCashReal : 0);
@@ -191,6 +201,26 @@ export const CashRegisterModal: React.FC<CashRegisterModalProps> = ({ isOpen, on
                 </div>
               )}
 
+              {closedShifts.length > 0 && (
+                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                  <div className="px-3 py-2 bg-slate-50 text-[11px] font-bold text-slate-700 uppercase tracking-wide">Últimos cierres de caja</div>
+                  <div className="max-h-40 overflow-y-auto divide-y divide-slate-100">
+                    {closedShifts.slice(0, 15).map((sh) => {
+                      const diff = (sh.finalCashReal ?? 0) - (sh.finalCashCalculated ?? 0);
+                      return (
+                        <div key={sh.id} className="px-3 py-1.5 flex items-center justify-between text-[11px]">
+                          <span className="text-slate-600 font-mono">{sh.closedAt ? formatDateTime(sh.closedAt) : '-'}</span>
+                          <span className="font-mono text-slate-800">{formatCurrency(sh.finalCashReal ?? 0)}</span>
+                          <span className={`font-mono font-bold ${diff === 0 ? 'text-emerald-600' : diff > 0 ? 'text-blue-600' : 'text-rose-600'}`}>
+                            {diff === 0 ? 'OK' : `${diff > 0 ? '+' : ''}${formatCurrency(diff)}`}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <form onSubmit={handleStartShift} className="space-y-3.5">
                 <div className="text-center py-2">
                   <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-2xs">
@@ -304,7 +334,7 @@ export const CashRegisterModal: React.FC<CashRegisterModalProps> = ({ isOpen, on
                     {formatCurrency(expectedCashInDrawer)}
                   </div>
                   <div className="text-[10px] text-slate-500 font-sans mt-0.5">
-                    Fondo inicial ({formatCurrency(initialFloat)}) + Efectivo cobrado ({formatCurrency(cashSales)})
+                    Fondo inicial ({formatCurrency(initialFloat)}) + Efectivo cobrado ({formatCurrency(cashSales)}){cashFiadosCollected > 0 ? ` + Fiados cobrados (${formatCurrency(cashFiadosCollected)})` : ''}
                   </div>
                 </div>
                 <div className="text-right">

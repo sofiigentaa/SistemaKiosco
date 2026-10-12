@@ -1,39 +1,38 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, Session } from '@supabase/supabase-js';
 
-// Get credentials from environment variables or fallback to localStorage
-const getEnvVar = (key: string): string => {
-  try {
-    return (import.meta as any).env?.[key] || '';
-  } catch {
-    return '';
-  }
-};
+// La nube se configura SOLO con variables de entorno al publicar
+// (VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY). Antes también se podía pegar
+// la URL y la clave desde la pantalla, y quedaban guardadas en el navegador.
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
-const envUrl = getEnvVar('VITE_SUPABASE_URL');
-const envKey = getEnvVar('VITE_SUPABASE_ANON_KEY');
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http'));
 
-const storedUrl = typeof window !== 'undefined' ? localStorage.getItem('kiosco_supabase_url') || '' : '';
-const storedKey = typeof window !== 'undefined' ? localStorage.getItem('kiosco_supabase_key') || '' : '';
-
-export const supabaseUrl = envUrl || storedUrl;
-export const supabaseAnonKey = envKey || storedKey;
-
-export const isSupabaseConfigured = Boolean(
-  supabaseUrl && supabaseAnonKey && supabaseUrl.startsWith('http')
-);
-
+// La clave "anon" es pública por diseño: los datos los protege el login +
+// las políticas RLS de supabase/schema.sql.
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true } })
   : null;
 
-export const saveSupabaseConfig = (url: string, key: string) => {
-  localStorage.setItem('kiosco_supabase_url', url.trim());
-  localStorage.setItem('kiosco_supabase_key', key.trim());
-  window.location.reload();
-};
+export async function getSession(): Promise<Session | null> {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return data.session;
+}
 
-export const clearSupabaseConfig = () => {
-  localStorage.removeItem('kiosco_supabase_url');
-  localStorage.removeItem('kiosco_supabase_key');
-  window.location.reload();
-};
+export function onSessionChange(cb: (session: Session | null) => void): () => void {
+  if (!supabase) return () => {};
+  const { data } = supabase.auth.onAuthStateChange((_event, session) => cb(session));
+  return () => data.subscription.unsubscribe();
+}
+
+export async function signIn(email: string, password: string): Promise<string | null> {
+  if (!supabase) return 'La nube no está configurada.';
+  const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+  if (!error) return null;
+  return /invalid/i.test(error.message) ? 'Email o contraseña incorrectos.' : 'No se pudo iniciar sesión.';
+}
+
+export async function signOut(): Promise<void> {
+  await supabase?.auth.signOut();
+}

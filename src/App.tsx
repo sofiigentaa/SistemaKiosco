@@ -7,20 +7,22 @@ import { AlertsScreen } from "./components/Alerts/AlertsScreen";
 import { SalesHistoryScreen } from "./components/Sales/SalesHistoryScreen";
 import { ReportsScreen } from "./components/Reports/ReportsScreen";
 import { CashRegisterModal } from "./components/CashRegister/CashRegisterModal";
-import { SupabaseSyncModal } from "./components/Common/SupabaseSyncModal";
 import { ClearDataModal } from "./components/Common/ClearDataModal";
-import { RotateCcw, Trash2 } from "lucide-react";
+import { RotateCcw, Trash2, LogOut, AlertTriangle } from "lucide-react";
+import { signOut } from "./lib/supabase";
 
 const KioskAppContent: React.FC = () => {
   const { 
     activeTab, 
     setActiveTab, 
     resetData, 
-    kioskPin
+    cloudEnabled,
+    cloudSyncStatus,
+    cloudError,
+    lastSyncTime,
   } = useKiosk();
 
   const [showCashModal, setShowCashModal] = useState(false);
-  const [showSyncModal, setShowSyncModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
 
@@ -30,9 +32,17 @@ const KioskAppContent: React.FC = () => {
       {/* Top Bar Header */}
       <Header 
         onOpenCashModal={() => setShowCashModal(true)} 
-        onOpenSyncModal={() => setShowSyncModal(true)}
-        onOpenClearModal={() => setShowClearModal(true)}
       />
+
+      {/* Aviso de sincronización (antes los errores con la nube no se mostraban) */}
+      {cloudEnabled && cloudError && (
+        <div role="alert" className="max-w-7xl mx-auto w-full px-4 sm:px-6 mt-3">
+          <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>{cloudError} Las ventas se guardan en este equipo y se reintenta solo.</span>
+          </div>
+        </div>
+      )}
 
       {/* Main View Router */}
       <main className="flex-1 pb-8">
@@ -60,11 +70,15 @@ const KioskAppContent: React.FC = () => {
       <footer className="bg-white border-t border-slate-200 py-3 px-4 text-xs text-slate-500 mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${kioskPin ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+            <span className={`w-2 h-2 rounded-full ${cloudEnabled ? (cloudSyncStatus === 'error' ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-slate-400'}`}></span>
             <span className="font-semibold text-slate-700">KioscoManager Pro</span>
             <span className="text-slate-300">•</span>
             <span className="text-slate-500">
-              {kioskPin ? `Sincronizado en tiempo real (PIN: ${kioskPin})` : 'Terminal Local (Toca Conectar Celulares para compartir)'}
+              {cloudEnabled
+                ? cloudSyncStatus === 'error'
+                  ? 'Sin conexión con la nube: se reintenta solo'
+                  : `En la nube, sincronizado entre equipos${lastSyncTime ? ` (${lastSyncTime})` : ''}`
+                : 'Modo local: los datos quedan en este navegador'}
             </span>
           </div>
 
@@ -79,14 +93,28 @@ const KioskAppContent: React.FC = () => {
               <span>Borrar Datos</span>
             </button>
 
-            <button
-              onClick={() => setShowResetConfirmModal(true)}
-              className="text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
-              title="Restablecer base de datos a ejemplos"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Restablecer Demo</span>
-            </button>
+            {/* Datos de ejemplo: solo en modo local (demo), nunca en el kiosco de un cliente */}
+            {!cloudEnabled && (
+              <button
+                onClick={() => setShowResetConfirmModal(true)}
+                className="text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
+                title="Restablecer base de datos a ejemplos"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Restablecer Demo</span>
+              </button>
+            )}
+
+            {cloudEnabled && (
+              <button
+                onClick={() => signOut()}
+                className="text-slate-500 hover:text-slate-800 flex items-center gap-1 transition-colors cursor-pointer"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Cerrar sesión</span>
+              </button>
+            )}
           </div>
         </div>
       </footer>
@@ -97,10 +125,6 @@ const KioskAppContent: React.FC = () => {
         onClose={() => setShowCashModal(false)}
       />
 
-      <SupabaseSyncModal
-        isOpen={showSyncModal}
-        onClose={() => setShowSyncModal(false)}
-      />
 
       <ClearDataModal
         isOpen={showClearModal}
@@ -148,10 +172,12 @@ const KioskAppContent: React.FC = () => {
   );
 };
 
-export default function App() {
+const App: React.FC<{ userId?: string }> = ({ userId }) => {
   return (
-    <KioskProvider>
+    <KioskProvider userId={userId}>
       <KioskAppContent />
     </KioskProvider>
   );
-}
+};
+
+export default App;

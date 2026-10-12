@@ -15,3 +15,9 @@ lleva a la pantalla correspondiente.
 
 **Soporte**: "Hablar con soporte" abre WhatsApp con tecnoros.ar. El número se
 cambia con la variable `VITE_SOPORTE_WHATSAPP` (por defecto 5493413130336).
+
+**Hablarle**: el botón del micrófono dicta la pregunta (Chrome, Edge y Safari, en
+compu y celular; la primera vez el navegador pide permiso). Si la pregunta se hizo
+hablando, la respuesta también se lee en voz alta. El reconocimiento de voz lo hace
+el navegador (en Chrome, con el servicio de Google); el sistema no guarda el audio
+ni el texto. En navegadores sin dictado el botón no aparece y se escribe como siempre.

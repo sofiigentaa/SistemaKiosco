@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MessageCircle, Send, X, ArrowRight } from 'lucide-react';
+import { MessageCircle, Send, X, ArrowRight, Mic, Square } from 'lucide-react';
 
 // Asistente guiado (hecho por tecnoros.ar).
 // - Sin IA ni servicios externos: responde con reglas y con los datos que ya
@@ -68,6 +68,40 @@ interface Props {
 
 let siguienteId = 1;
 
+// Dictado por voz con el reconocimiento del navegador (Chrome, Edge, Safari).
+// Si el navegador no lo tiene, el botón del micrófono no aparece.
+type Reconocedor = {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null;
+  onerror: ((e: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+const crearReconocedor = (): Reconocedor | null => {
+  const w = window as unknown as { SpeechRecognition?: new () => Reconocedor; webkitSpeechRecognition?: new () => Reconocedor };
+  const C = w.SpeechRecognition || w.webkitSpeechRecognition;
+  return C ? new C() : null;
+};
+
+// Lee la respuesta en voz alta (solo cuando la pregunta se hizo hablando).
+function leer(texto: string) {
+  try {
+    const synth = window.speechSynthesis;
+    if (!synth) return;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = 'es-AR';
+    const voz = synth.getVoices().find((v) => v.lang === 'es-AR') || synth.getVoices().find((v) => v.lang.startsWith('es'));
+    if (voz) u.voice = voz;
+    synth.speak(u);
+  } catch {
+    // sin voz: queda la respuesta escrita
+  }
+}
+
 export const AsistenteChat: React.FC<Props> = ({
   temas,
   saludo,
@@ -79,6 +113,10 @@ export const AsistenteChat: React.FC<Props> = ({
 }) => {
   const [abierto, setAbierto] = useState(false);
   const [texto, setTexto] = useState('');
+  const [escuchando, setEscuchando] = useState(false);
+  const [avisoVoz, setAvisoVoz] = useState<string | null>(null);
+  const recRef = useRef<Reconocedor | null>(null);
+  const [hayVoz] = useState(() => typeof window !== 'undefined' && crearReconocedor() !== null);
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const finRef = useRef<HTMLDivElement>(null);
   const soporte = `https://wa.me/${soporteWhatsapp}?text=${encodeURIComponent(soporteMensaje)}`;
@@ -93,7 +131,7 @@ export const AsistenteChat: React.FC<Props> = ({
     finRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [mensajes]);
 
-  const preguntar = (pregunta: string) => {
+  const preguntar = (pregunta: string, porVoz = false) => {
     const limpia = pregunta.trim();
     if (!limpia) return;
     const r = buscarRespuesta(temas, limpia) || {
@@ -101,7 +139,53 @@ export const AsistenteChat: React.FC<Props> = ({
     };
     setMensajes((m) => [...m, { id: siguienteId++, de: 'persona', r: { texto: limpia } }, { id: siguienteId++, de: 'asistente', r }]);
     setTexto('');
+    if (porVoz) leer([r.texto, ...(r.lineas || [])].join('. '));
   };
+
+  const hablar = () => {
+    if (escuchando) {
+      recRef.current?.stop();
+      return;
+    }
+    const rec = crearReconocedor();
+    if (!rec) return;
+    recRef.current = rec;
+    rec.lang = 'es-AR';
+    rec.interimResults = true;
+    rec.continuous = false;
+    let final = '';
+    rec.onresult = (e) => {
+      let parcial = '';
+      for (let i = 0; i < e.results.length; i++) {
+        const res = e.results[i];
+        if (res.isFinal) final += res[0].transcript;
+        else parcial += res[0].transcript;
+      }
+      setTexto((final + parcial).trim());
+    };
+    rec.onerror = (e) => {
+      setAvisoVoz(
+        e.error === 'not-allowed' || e.error === 'service-not-allowed'
+          ? 'Para hablarle, permití el micrófono en el navegador.'
+          : e.error === 'no-speech'
+            ? 'No te escuché. Tocá el micrófono y probá de nuevo.'
+            : 'No se pudo usar el micrófono. Podés escribir la pregunta.'
+      );
+    };
+    rec.onend = () => {
+      setEscuchando(false);
+      if (final.trim()) preguntar(final, true);
+    };
+    setAvisoVoz(null);
+    setEscuchando(true);
+    try {
+      rec.start();
+    } catch {
+      setEscuchando(false);
+    }
+  };
+
+  useEffect(() => () => recRef.current?.stop(), []);
 
   const chips = temas.filter((t) => t.chip);
 
@@ -200,17 +284,29 @@ export const AsistenteChat: React.FC<Props> = ({
               <input
                 value={texto}
                 onChange={(e) => setTexto(e.target.value)}
-                placeholder="Escribí tu pregunta…"
+                placeholder={escuchando ? 'Te escucho…' : hayVoz ? 'Escribí o tocá el micrófono…' : 'Escribí tu pregunta…'}
                 aria-label="Tu pregunta"
                 maxLength={200}
                 className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:border-cyan-500"
               />
+              {hayVoz && (
+                <button
+                  type="button"
+                  onClick={hablar}
+                  data-testid="asistente-mic"
+                  className={`rounded-xl p-2.5 cursor-pointer border ${escuchando ? 'bg-rose-600 border-rose-600 text-white animate-pulse' : 'bg-white border-slate-300 text-slate-700 hover:border-cyan-500'}`}
+                  aria-label={escuchando ? 'Dejar de escuchar' : 'Hablar con el micrófono'}
+                  title={escuchando ? 'Dejar de escuchar' : 'Hablar con el micrófono'}
+                >
+                  {escuchando ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </button>
+              )}
               <button type="submit" className="rounded-xl bg-slate-900 text-white p-2.5 hover:bg-slate-800 cursor-pointer" aria-label="Enviar">
                 <Send className="w-4 h-4" />
               </button>
             </form>
             <div className="px-3 pb-2.5 text-[11px] text-slate-500 flex items-center justify-between gap-2">
-              <span>No guarda nada de lo que escribís.</span>
+              <span>{avisoVoz || (hayVoz ? 'No guarda nada. La voz la pasa a texto tu navegador.' : 'No guarda nada de lo que escribís.')}</span>
               <a href={soporte} target="_blank" rel="noopener noreferrer" className="font-semibold text-emerald-700 hover:underline">
                 Hablar con soporte
               </a>

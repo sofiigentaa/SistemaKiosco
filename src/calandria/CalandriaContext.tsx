@@ -28,7 +28,10 @@ interface CalandriaContextType {
   minutesTotal: number;
   approvedCount: number;
   result: CalandriaResult | null;
+  lastResult: CalandriaResult | null; // lo último que preparó (para compartir / imprimir); solo en memoria
   clearResult: () => void;
+  homeActive: boolean; // se está viendo la pantalla de la C
+  setHomeActive: (v: boolean) => void;
   toast: string | null;
   refreshLog: () => void;
 }
@@ -72,7 +75,15 @@ export const CalandriaProvider: React.FC<{ children: React.ReactNode; userId?: s
   const [logOpen, setLogOpen] = useState(false);
   const [log, setLog] = useState<LogEntry[]>(() => (cloud ? [] : readLocalLog()));
   const [pending, setPending] = useState<PendingAction[]>(() => (cloud ? readPending(userId) : []));
-  const [result, setResult] = useState<CalandriaResult | null>(null);
+  const [result, setResultState] = useState<CalandriaResult | null>(null);
+  const [lastResult, setLastResult] = useState<CalandriaResult | null>(null);
+  const setResult = (r: CalandriaResult | null) => {
+    setResultState(r);
+    if (r) setLastResult(r);
+  };
+  const [homeActive, setHomeActive] = useState(false);
+  const homeRef = useRef(false);
+  homeRef.current = homeActive;
   const [toast, setToast] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -216,7 +227,7 @@ export const CalandriaProvider: React.FC<{ children: React.ReactNode; userId?: s
     if (blockRef.current) return;
     blockRef.current = true;
     setTimeout(() => (blockRef.current = false), 600); // evita doble toque
-    if (!panelRef.current) {
+    if (!panelRef.current && !homeRef.current) {
       setPanelOpen(true);
       return;
     }
@@ -272,7 +283,10 @@ export const CalandriaProvider: React.FC<{ children: React.ReactNode; userId?: s
     minutesTotal,
     approvedCount,
     result,
-    clearResult: () => setResult(null),
+    lastResult,
+    clearResult: () => setResultState(null),
+    homeActive,
+    setHomeActive,
     toast,
     refreshLog,
   };

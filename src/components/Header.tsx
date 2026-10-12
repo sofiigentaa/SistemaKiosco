@@ -18,12 +18,13 @@ import { CalandriaBrand } from "../calandria/CalandriaUI";
 
 interface HeaderProps {
   onOpenCashModal: () => void;
+  onGoHome?: () => void; // volver a la pantalla de la C
   onOpenQuickSaleModal?: () => void;
   onOpenSyncModal?: () => void;
   onOpenClearModal?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModal }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModal, onGoHome }) => {
   const { 
     activeTab, 
     setActiveTab, 
@@ -69,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModa
           <div className="flex items-center gap-2.5">
             <div>
               <div className="flex items-center gap-2">
-                <CalandriaBrand />
+                <CalandriaBrand onClick={onGoHome} />
 
                 {/* Supabase Cloud Sync Indicator (informational only, no click action) */}
                 <span

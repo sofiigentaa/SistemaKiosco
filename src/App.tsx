@@ -12,6 +12,8 @@ import { RotateCcw, Trash2, LogOut, AlertTriangle } from "lucide-react";
 import { signOut } from "./lib/supabase";
 import { CalandriaProvider } from "./calandria/CalandriaContext";
 import { CalandriaPanel, CalandriaLogModal, CalandriaResultModal, CalandriaToast } from "./calandria/CalandriaUI";
+import { CalandriaHome, ResumenSeccion } from "./calandria/CalandriaHome";
+import { formatCurrency } from "./utils/formatters";
 import { BRAND } from "./config/brand";
 import { AsistenteKiosco } from "./asistente/AsistenteKiosco";
 
@@ -26,9 +28,72 @@ const KioskAppContent: React.FC = () => {
     lastSyncTime,
   } = useKiosk();
 
+  const kiosk = useKiosk();
+  // Pantalla principal: la C de Calandria. "Abrir sistema" muestra el sistema completo.
+  const [vista, setVistaState] = useState<'calandria' | 'sistema'>(() => {
+    try {
+      return localStorage.getItem('calandria_vista') === 'sistema' ? 'sistema' : 'calandria';
+    } catch {
+      return 'calandria';
+    }
+  });
+  const setVista = (v: 'calandria' | 'sistema') => {
+    setVistaState(v);
+    try {
+      localStorage.setItem('calandria_vista', v);
+    } catch {
+      // sin almacenamiento: queda solo en memoria
+    }
+    window.scrollTo(0, 0);
+  };
+
+  // Resumen del día para Compartir / Imprimir.
+  const resumen = (): ResumenSeccion[] => {
+    const k = kiosk;
+    const out: ResumenSeccion[] = [
+      {
+        titulo: 'Ventas de hoy',
+        lineas: [
+          `${k.todaySalesCount} ${k.todaySalesCount === 1 ? 'venta' : 'ventas'} por ${formatCurrency(k.todaySalesTotal)}`,
+          `Ganancia: ${formatCurrency(k.todayProfitTotal)}`,
+        ],
+      },
+    ];
+    const sh = k.currentShift;
+    if (sh && sh.isOpen) {
+      const desde = new Date(sh.openedAt).getTime();
+      const efectivo = k.sales
+        .filter((x) => x.status === 'completada' && x.paymentMethod === 'Efectivo' && new Date(x.date).getTime() >= desde)
+        .reduce((a, x) => a + x.total, 0);
+      const fiadosCobrados = k.sales
+        .filter((x) => x.fiadoPaidMethod === 'Efectivo' && x.fiadoPaidAt && new Date(x.fiadoPaidAt).getTime() >= desde)
+        .reduce((a, x) => a + x.total, 0);
+      out.push({ titulo: 'Caja', lineas: [`Tendría que haber ${formatCurrency(sh.initialCash + efectivo + fiadosCobrados)} en el cajón`] });
+    }
+    const reponer = [...k.outOfStockProducts, ...k.lowStockProducts];
+    out.push({ titulo: 'Para reponer', lineas: reponer.length ? reponer.slice(0, 10).map((p) => `${p.name}: quedan ${Math.max(p.stock, 0)}`) : ['Nada: todo bien de stock'] });
+    const vencen = [...k.expiredProducts, ...k.expiringProducts];
+    if (vencen.length) out.push({ titulo: 'Vencidos o por vencer', lineas: vencen.slice(0, 10).map((p) => p.name) });
+    const fiados = k.sales.filter((x) => x.status === 'completada' && x.paymentMethod === 'Cuenta Corriente (Fiado)' && !x.fiadoPaidAt);
+    if (fiados.length) out.push({ titulo: 'Fiados sin cobrar', lineas: [`${formatCurrency(fiados.reduce((a, x) => a + x.total, 0))} en ${fiados.length} ${fiados.length === 1 ? 'venta' : 'ventas'}`] });
+    return out;
+  };
+
   const [showCashModal, setShowCashModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
+
+  if (vista === 'calandria') {
+    return (
+      <>
+        <CalandriaHome negocio={`${BRAND.first} ${BRAND.second}`} resumen={resumen} onOpenSystem={() => setVista('sistema')} />
+        <CalandriaPanel />
+        <CalandriaLogModal />
+        <CalandriaResultModal />
+        <CalandriaToast />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-indigo-600 selection:text-white">
@@ -36,6 +101,7 @@ const KioskAppContent: React.FC = () => {
       {/* Top Bar Header */}
       <Header 
         onOpenCashModal={() => setShowCashModal(true)} 
+        onGoHome={() => setVista('calandria')}
       />
 
       {/* Aviso de sincronización (antes los errores con la nube no se mostraban) */}

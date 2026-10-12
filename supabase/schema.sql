@@ -98,6 +98,84 @@ BEGIN
 END $$;
 
 -- ---------------------------------------------------------------------------
+-- Calandria: registro sellado de acciones.
+-- * Sin datos personales: solo tipo de tarea, acción, cantidad y minutos.
+-- * La base pone el número, la fecha y la huella (SHA-256 de la línea + la
+--   huella anterior). La app verifica la cadena con la misma fórmula.
+-- * Nadie puede modificar ni borrar líneas (ni el dueño, ni la app). Tampoco se
+--   borran si se elimina el usuario: el registro tiene que quedar.
+CREATE TABLE IF NOT EXISTS public.kiosk_calandria_log (
+  owner UUID NOT NULL DEFAULT auth.uid(),
+  seq INTEGER NOT NULL,
+  at TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('reposicion', 'ingreso_habitual', 'liquidacion', 'fiados', 'sistema')),
+  action TEXT NOT NULL CHECK (action IN ('aprobada', 'descartada', 'pausa', 'reanudada')),
+  qty INTEGER NOT NULL DEFAULT 0 CHECK (qty BETWEEN 0 AND 100000),
+  minutes INTEGER NOT NULL DEFAULT 0 CHECK (minutes BETWEEN 0 AND 600),
+  prev_hash TEXT NOT NULL,
+  hash TEXT NOT NULL,
+  PRIMARY KEY (owner, seq)
+);
+
+CREATE OR REPLACE FUNCTION public.kiosk_calandria_seal()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+  last_seq INTEGER;
+  last_hash TEXT;
+BEGIN
+  NEW.owner := COALESCE(auth.uid(), NEW.owner);
+  IF NEW.owner IS NULL THEN
+    RAISE EXCEPTION 'Calandria: falta el usuario';
+  END IF;
+  -- Una línea a la vez por cuenta, para que la cadena no se bifurque.
+  PERFORM pg_advisory_xact_lock(hashtextextended('calandria:' || NEW.owner::TEXT, 0));
+  SELECT l.seq, l.hash INTO last_seq, last_hash
+    FROM public.kiosk_calandria_log l WHERE l.owner = NEW.owner ORDER BY l.seq DESC LIMIT 1;
+  NEW.seq := COALESCE(last_seq, 0) + 1;
+  NEW.prev_hash := COALESCE(last_hash, 'GENESIS');
+  NEW.at := to_char(clock_timestamp() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"');
+  NEW.hash := encode(sha256(convert_to(
+    NEW.seq || '|' || NEW.at || '|' || NEW.kind || '|' || NEW.action || '|' || NEW.qty || '|' || NEW.minutes || '|' || NEW.prev_hash,
+    'UTF8')), 'hex');
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.kiosk_calandria_no_changes()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RAISE EXCEPTION 'El registro de Calandria no se puede modificar ni borrar';
+END;
+$$;
+
+DROP TRIGGER IF EXISTS kiosk_calandria_seal ON public.kiosk_calandria_log;
+CREATE TRIGGER kiosk_calandria_seal BEFORE INSERT ON public.kiosk_calandria_log
+  FOR EACH ROW EXECUTE FUNCTION public.kiosk_calandria_seal();
+DROP TRIGGER IF EXISTS kiosk_calandria_no_update ON public.kiosk_calandria_log;
+CREATE TRIGGER kiosk_calandria_no_update BEFORE UPDATE OR DELETE ON public.kiosk_calandria_log
+  FOR EACH ROW EXECUTE FUNCTION public.kiosk_calandria_no_changes();
+DROP TRIGGER IF EXISTS kiosk_calandria_no_truncate ON public.kiosk_calandria_log;
+CREATE TRIGGER kiosk_calandria_no_truncate BEFORE TRUNCATE ON public.kiosk_calandria_log
+  FOR EACH STATEMENT EXECUTE FUNCTION public.kiosk_calandria_no_changes();
+
+ALTER TABLE public.kiosk_calandria_log ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "calandria ver lo propio" ON public.kiosk_calandria_log;
+CREATE POLICY "calandria ver lo propio" ON public.kiosk_calandria_log FOR SELECT TO authenticated
+  USING (owner = auth.uid());
+DROP POLICY IF EXISTS "calandria agregar lo propio" ON public.kiosk_calandria_log;
+CREATE POLICY "calandria agregar lo propio" ON public.kiosk_calandria_log FOR INSERT TO authenticated
+  WITH CHECK (owner = auth.uid());
+REVOKE ALL ON public.kiosk_calandria_log FROM anon, authenticated;
+GRANT SELECT, INSERT ON public.kiosk_calandria_log TO authenticated;
+REVOKE ALL ON FUNCTION public.kiosk_calandria_seal() FROM anon, public;
+
+-- ---------------------------------------------------------------------------
 -- Versión anterior: todo el kiosco estaba en la tabla kiosk_state (fila 'main').
 -- 1) Para pasar esos datos a la cuenta del negocio, reemplazar el email y correr:
 --

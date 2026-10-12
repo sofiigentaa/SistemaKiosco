@@ -1,4 +1,4 @@
-import { Product, Sale, CashRegisterShift } from '../types';
+import { Product, Sale, CashRegisterShift, StockMovement } from '../types';
 
 export const INITIAL_CATEGORIES = [
   'Granja & Huevos',
@@ -617,7 +617,51 @@ export const generateSampleSales = (): Sale[] => {
       customerName: 'Roberto Sosa',
       status: 'completada',
     },
+    // Fiados viejos (para que Calandria proponga los recordatorios en la demo)
+    {
+      id: 'sale-090',
+      date: getRelativeDate(9, 5, 0),
+      items: [{ productId: 'prod-025', productName: 'Yerba Mate Playadito 500g', category: 'Almacén & Despensa', quantity: 2, unitCost: 1900, unitPrice: 2900, total: 5800, profit: 2000 }],
+      subtotal: 5800,
+      discount: 0,
+      total: 5800,
+      totalCost: 3800,
+      totalProfit: 2000,
+      paymentMethod: 'Cuenta Corriente (Fiado)',
+      customerName: 'Marta R.',
+      status: 'completada',
+    },
+    {
+      id: 'sale-085',
+      date: getRelativeDate(12, 5, 0),
+      items: [{ productId: 'prod-018', productName: 'Coca Cola 500ml', category: 'Bebidas & Gaseosas', quantity: 3, unitCost: 950, unitPrice: 1500, total: 4500, profit: 1650 }],
+      subtotal: 4500,
+      discount: 0,
+      total: 4500,
+      totalCost: 2850,
+      totalProfit: 1650,
+      paymentMethod: 'Cuenta Corriente (Fiado)',
+      customerName: 'Julio P.',
+      status: 'completada',
+    },
   ];
+};
+
+// Ingresos que se repiten (la demo muestra cómo Calandria "aprende" el pedido
+// semanal de gaseosas: 24 u. cada 7 días).
+export const generateSampleMovements = (): StockMovement[] => {
+  return [28, 21, 14, 7].map((daysAgo, i) => ({
+    id: `mov-demo-coca-${i}`,
+    date: getRelativeDate(daysAgo, 2, 0),
+    productId: 'prod-018',
+    productName: 'Coca Cola 500ml',
+    type: 'ingreso' as const,
+    quantityChange: 24,
+    previousStock: 8,
+    newStock: 32,
+    reason: 'Reabastecimiento de mercadería / Compra',
+    costPrice: 950,
+  })).reverse();
 };
 
 export const INITIAL_SHIFTS: CashRegisterShift[] = [

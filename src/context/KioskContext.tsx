@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Product, Sale, CartItem, SaleItem, StockMovement, CashRegisterShift, PaymentMethod } from '../types';
-import { INITIAL_PRODUCTS, generateSampleSales, INITIAL_SHIFTS, INITIAL_CATEGORIES } from '../data/initialData';
+import { INITIAL_PRODUCTS, generateSampleSales, generateSampleMovements, INITIAL_SHIFTS, INITIAL_CATEGORIES } from '../data/initialData';
 import { getDaysUntil, playSuccessBeep } from '../utils/formatters';
 import { isSupabaseConfigured } from '../lib/supabase';
 import { fetchCloudState, pushChanges, subscribeCloudChanges, makeSnapshot, KioskCloudState, Snapshot, RemoteChange } from '../lib/supabaseSync';
@@ -125,7 +125,7 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
   );
   const [products, setProducts] = useState<Product[]>(() => readCache(STORAGE_KEYS.PRODUCTS, cloud ? [] : INITIAL_PRODUCTS));
   const [sales, setSales] = useState<Sale[]>(() => readCache(STORAGE_KEYS.SALES, cloud ? [] : generateSampleSales()));
-  const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => readCache(STORAGE_KEYS.MOVEMENTS, []));
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => readCache(STORAGE_KEYS.MOVEMENTS, cloud ? [] : generateSampleMovements()));
   const [currentShift, setCurrentShift] = useState<CashRegisterShift | null>(() =>
     readCache(STORAGE_KEYS.SHIFT, cloud ? null : INITIAL_SHIFTS[0])
   );
@@ -417,7 +417,8 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
       updatedAt: new Date().toISOString(),
     };
 
-    const nextProducts = [newProduct, ...products];
+    const nextProducts = [newProduct, ...productsRef.current];
+    productsRef.current = nextProducts;
     setProducts(nextProducts);
 
     if (data.category && !categories.includes(data.category)) {
@@ -446,7 +447,7 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
   };
 
   const updateProduct = (id: string, data: Partial<Product>) => {
-    const nextProducts = products.map((p) => {
+    const nextProducts = productsRef.current.map((p) => {
       if (p.id === id) {
         const updated = { ...p, ...data, updatedAt: new Date().toISOString() };
 
@@ -477,17 +478,19 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
       return p;
     });
 
+    productsRef.current = nextProducts;
     setProducts(nextProducts);
   };
 
   const deleteProduct = (id: string) => {
-    const nextProducts = products.filter((p) => p.id !== id);
+    const nextProducts = productsRef.current.filter((p) => p.id !== id);
+    productsRef.current = nextProducts;
     setProducts(nextProducts);
   };
 
   const restockProduct = (id: string, quantityAdded: number, newCostPrice?: number, newSalePrice?: number) => {
     if (quantityAdded <= 0) return;
-    const nextProducts = products.map((p) => {
+    const nextProducts = productsRef.current.map((p) => {
       if (p.id === id) {
         const newStock = p.stock + quantityAdded;
         const cost = newCostPrice !== undefined ? newCostPrice : p.costPrice;
@@ -519,12 +522,13 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
       return p;
     });
 
+    productsRef.current = nextProducts;
     setProducts(nextProducts);
   };
 
   const applyBulkPriceAdjustment = (category: string | 'ALL', percentage: number) => {
     const factor = 1 + percentage / 100;
-    const nextProducts = products.map((p) => {
+    const nextProducts = productsRef.current.map((p) => {
       if (category === 'ALL' || p.category === category) {
         const updatedSalePrice = Math.round(p.salePrice * factor);
         return {
@@ -536,6 +540,7 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
       return p;
     });
 
+    productsRef.current = nextProducts;
     setProducts(nextProducts);
   };
 
@@ -586,7 +591,7 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
     };
 
     // Update product stock
-    const nextProducts = products.map((p) => {
+    const nextProducts = productsRef.current.map((p) => {
       const itemSold = items.find((it) => it.product.id === p.id);
       if (itemSold) {
         const updatedStock = Math.max(0, p.stock - itemSold.quantity);
@@ -599,11 +604,12 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
       return p;
     });
 
+    productsRef.current = nextProducts;
     setProducts(nextProducts);
 
     // Create stock movements
     const movements: StockMovement[] = items.map((it) => {
-      const currentProd = products.find((p) => p.id === it.product.id);
+      const currentProd = productsRef.current.find((p) => p.id === it.product.id);
       const currentStk = currentProd ? currentProd.stock : 0;
       return {
         id: `mov-${Date.now()}-${it.product.id}-${Math.random().toString(36).slice(2, 6)}`,
@@ -638,7 +644,7 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
     const nextSales = sales.map((s) => (s.id === saleId ? { ...s, status: 'anulada' as const } : s));
     setSales(nextSales);
 
-    const nextProducts = products.map((p) => {
+    const nextProducts = productsRef.current.map((p) => {
       const item = sale.items.find((it) => it.productId === p.id);
       if (item) {
         const newStock = p.stock + item.quantity;
@@ -651,10 +657,11 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
       return p;
     });
 
+    productsRef.current = nextProducts;
     setProducts(nextProducts);
 
     const restoreMovements: StockMovement[] = sale.items.map((it) => {
-      const currentProd = products.find((p) => p.id === it.productId);
+      const currentProd = productsRef.current.find((p) => p.id === it.productId);
       const currentStk = currentProd ? currentProd.stock : 0;
       return {
         id: `mov-anul-${Date.now()}-${it.productId}-${Math.random().toString(36).slice(2, 6)}`,
@@ -724,9 +731,10 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
   };
 
   const resetData = () => {
+    productsRef.current = INITIAL_PRODUCTS;
     setProducts(INITIAL_PRODUCTS);
     setSales(generateSampleSales());
-    setStockMovements([]);
+    setStockMovements(generateSampleMovements());
     setCurrentShift(INITIAL_SHIFTS[0]);
     setClosedShifts([]);
   };

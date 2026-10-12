@@ -15,6 +15,7 @@ import {
 import { useKiosk } from "../context/KioskContext";
 import { BRAND } from '../config/brand';
 import { formatCurrency } from "../utils/formatters";
+import { CalandriaHeaderButton } from "../calandria/CalandriaUI";
 
 interface HeaderProps {
   onOpenCashModal: () => void;
@@ -146,6 +147,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModa
 
           {/* Quick Metrics & Actions */}
           <div className="flex items-center gap-2">
+            <CalandriaHeaderButton />
             {/* Sales of Day summary */}
             <div className="hidden lg:flex items-center gap-2 bg-slate-800 border border-slate-700 rounded px-2.5 py-1 text-xs">
               <div className="text-right">

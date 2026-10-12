@@ -91,7 +91,7 @@ export const InventoryScreen: React.FC = () => {
           newSalePrice = p.costPrice;
         }
       }
-      updateProduct(id, { salePrice: newSalePrice });
+      updateProduct(id, { salePrice: newSalePrice, liquidationApplied: true });
       count++;
     });
 

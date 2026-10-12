@@ -10,6 +10,9 @@ import { CashRegisterModal } from "./components/CashRegister/CashRegisterModal";
 import { ClearDataModal } from "./components/Common/ClearDataModal";
 import { RotateCcw, Trash2, LogOut, AlertTriangle } from "lucide-react";
 import { signOut } from "./lib/supabase";
+import { CalandriaProvider } from "./calandria/CalandriaContext";
+import { CalandriaPanel, CalandriaLogModal, CalandriaResultModal, CalandriaToast } from "./calandria/CalandriaUI";
+import { BRAND } from "./config/brand";
 
 const KioskAppContent: React.FC = () => {
   const { 
@@ -119,6 +122,12 @@ const KioskAppContent: React.FC = () => {
         </div>
       </footer>
 
+      {/* Calandria */}
+      <CalandriaPanel />
+      <CalandriaLogModal />
+      <CalandriaResultModal />
+      <CalandriaToast />
+
       {/* MODALS */}
       <CashRegisterModal
         isOpen={showCashModal}
@@ -175,7 +184,9 @@ const KioskAppContent: React.FC = () => {
 const App: React.FC<{ userId?: string }> = ({ userId }) => {
   return (
     <KioskProvider userId={userId}>
-      <KioskAppContent />
+      <CalandriaProvider userId={userId} brandName={`${BRAND.first} ${BRAND.second}`}>
+        <KioskAppContent />
+      </CalandriaProvider>
     </KioskProvider>
   );
 };

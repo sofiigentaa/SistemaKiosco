@@ -27,5 +27,5 @@
 ## Golondrina
 
 Si el kiosco ya estaba andando, volver a correr `supabase/schema.sql` (se puede
-correr de nuevo sin problema): agrega la tabla del registro sellado de Golondrina.
+correr de nuevo sin problema): agrega la tabla del historial de Golondrina.
 Cómo funciona: ver `GOLONDRINA.md`.

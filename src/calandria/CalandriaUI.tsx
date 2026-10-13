@@ -196,7 +196,7 @@ export const CalandriaPanel: React.FC = () => {
           ))}
         </div>
 
-        {/* Registro sellado */}
+        {/* Historial */}
         <button
           type="button"
           onClick={() => {
@@ -207,7 +207,7 @@ export const CalandriaPanel: React.FC = () => {
         >
           {c.verification.ok ? <ShieldCheck className="w-4 h-4 text-emerald-600" /> : <ShieldAlert className="w-4 h-4 text-rose-600" />}
           <span className="flex-1">
-            <b>Registro sellado</b> · {c.verification.count + c.pending.length} acciones ·{' '}
+            <b>Historial</b> · {c.verification.count + c.pending.length} acciones ·{' '}
             {c.verification.ok ? 'íntegro' : `alterado en la línea ${c.verification.brokenAt}`}
           </span>
           <span className="text-cyan-700 font-semibold">Ver</span>
@@ -226,14 +226,14 @@ export const CalandriaLogModal: React.FC = () => {
     <div className="fixed inset-0 z-[60] bg-slate-950/70 flex items-center justify-center p-3" onClick={() => c.setLogOpen(false)}>
       <div
         role="dialog"
-        aria-label="Registro sellado de Golondrina"
+        aria-label="Historial de Golondrina"
         className="bg-white w-full max-w-3xl max-h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-4 py-3 border-b border-slate-200 flex items-center gap-3">
           <CalandriaMark className="w-7 h-8" light />
           <div className="flex-1">
-            <h3 className="font-bold text-slate-900 text-sm">Registro sellado</h3>
+            <h3 className="font-bold text-slate-900 text-sm">Historial</h3>
             <p className="text-[11px] text-slate-500">
               Qué hizo Golondrina y cuándo. Sin nombres ni datos de clientes: solo el tipo de tarea y la cantidad.
             </p>

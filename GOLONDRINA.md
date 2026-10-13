@@ -23,7 +23,7 @@ kiosco repite siempre. No hace nada sola: cada propuesta espera que la apruebes.
   Si el panel está cerrado, el botón primero lo abre (nunca aprueba sin que se vea qué).
 - Luz: verde = todo en orden · ámbar = hay algo para aprobar · gris = en pausa.
 
-## Registro sellado
+## Historial (registro protegido)
 
 Cada aprobación, "ahora no", pausa y reanudación queda en el registro con número,
 fecha, tipo de tarea, cantidad y minutos estimados. **No guarda nombres, teléfonos
@@ -51,7 +51,7 @@ Al entrar se ve solo la G de Golondrina:
 - Abajo: **una solución de tecnoros.ar**.
 - **Abrir sistema** (arriba a la derecha) lleva al sistema completo. Desde ahí, tocando
   el logo de Golondrina se vuelve a la G. Cada equipo recuerda en qué pantalla quedó.
-- "X min ahorrados este mes" abre el panel con la pausa y el registro sellado.
+- "X min ahorrados este mes" abre el panel con la pausa y el historial.
 - **Hoy**: el informe del día en pantalla (lo mismo que se imprime). Cada parte tiene
   "Ver" y lleva al detalle: por ejemplo, los eventos con saldo, los recordatorios de hoy,
   lo que hay que reponer, los fiados o el registro de lo que hizo Golondrina hoy.

@@ -49,7 +49,7 @@ export const AlertsScreen: React.FC<AlertsScreenProps> = ({ onGoToInventory, onG
 
   const handleApplyDiscountUpdates = (updates: Array<{ id: string; newPrice: number }>, label: string) => {
     updates.forEach((u) => {
-      updateProduct(u.id, { salePrice: u.newPrice });
+      updateProduct(u.id, { salePrice: u.newPrice, liquidationApplied: true });
     });
     setSuccessToast(label);
     setTimeout(() => setSuccessToast(null), 3500);

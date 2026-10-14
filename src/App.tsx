@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { KioskProvider, useKiosk } from "./context/KioskContext";
 import { Header } from "./components/Header";
 import { PosScreen } from "./components/POS/PosScreen";
@@ -10,6 +10,12 @@ import { CashRegisterModal } from "./components/CashRegister/CashRegisterModal";
 import { ClearDataModal } from "./components/Common/ClearDataModal";
 import { RotateCcw, Trash2, LogOut, AlertTriangle } from "lucide-react";
 import { signOut } from "./lib/supabase";
+import { CalandriaProvider } from "./calandria/CalandriaContext";
+import { CalandriaPanel, CalandriaLogModal, CalandriaResultModal, CalandriaToast } from "./calandria/CalandriaUI";
+import { CalandriaHome, ResumenSeccion } from "./calandria/CalandriaHome";
+import { formatCurrency } from "./utils/formatters";
+import { BRAND } from "./config/brand";
+import { AsistenteKiosco } from "./asistente/AsistenteKiosco";
 
 const KioskAppContent: React.FC = () => {
   const { 
@@ -22,9 +28,101 @@ const KioskAppContent: React.FC = () => {
     lastSyncTime,
   } = useKiosk();
 
+  const kiosk = useKiosk();
+  // Filtro con el que se abre el historial cuando se llega desde el informe de la G.
+  const [salesFilter, setSalesFilter] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    if (kiosk.activeTab !== 'sales') setSalesFilter(undefined);
+  }, [kiosk.activeTab]);
+  const abrir = (tab: 'sales' | 'alerts' | 'inventory' | 'reports', filtro?: string) => () => {
+    setSalesFilter(filtro);
+    setVista('sistema');
+    kiosk.setActiveTab(tab);
+  };
+  // Pantalla principal: la G de Golondrina. "Abrir sistema" muestra el sistema completo.
+  const [vista, setVistaState] = useState<'calandria' | 'sistema'>(() => {
+    try {
+      return localStorage.getItem('calandria_vista') === 'sistema' ? 'sistema' : 'calandria';
+    } catch {
+      return 'calandria';
+    }
+  });
+  const setVista = (v: 'calandria' | 'sistema') => {
+    setVistaState(v);
+    try {
+      localStorage.setItem('calandria_vista', v);
+    } catch {
+      // sin almacenamiento: queda solo en memoria
+    }
+    window.scrollTo(0, 0);
+  };
+
+  // Resumen del día para Compartir / Imprimir.
+  const resumen = (): ResumenSeccion[] => {
+    const k = kiosk;
+    const out: ResumenSeccion[] = [
+      {
+        titulo: 'Ventas de hoy',
+        lineas: [
+          `${k.todaySalesCount} ${k.todaySalesCount === 1 ? 'venta' : 'ventas'} por ${formatCurrency(k.todaySalesTotal)}`,
+          `Ganancia: ${formatCurrency(k.todayProfitTotal)}`,
+        ],
+        ver: abrir('sales', 'HOY'),
+      },
+    ];
+    const sh = k.currentShift;
+    if (sh && sh.isOpen) {
+      const desde = new Date(sh.openedAt).getTime();
+      const efectivo = k.sales
+        .filter((x) => x.status === 'completada' && x.paymentMethod === 'Efectivo' && new Date(x.date).getTime() >= desde)
+        .reduce((a, x) => a + x.total, 0);
+      const fiadosCobrados = k.sales
+        .filter((x) => x.fiadoPaidMethod === 'Efectivo' && x.fiadoPaidAt && new Date(x.fiadoPaidAt).getTime() >= desde)
+        .reduce((a, x) => a + x.total, 0);
+      out.push({
+        titulo: 'Caja',
+        lineas: [`Tendría que haber ${formatCurrency(sh.initialCash + efectivo + fiadosCobrados)} en el cajón`],
+        ver: () => {
+          setVista('sistema');
+          setShowCashModal(true);
+        },
+      });
+    }
+    const reponer = [...k.outOfStockProducts, ...k.lowStockProducts];
+    out.push({
+      titulo: 'Para reponer',
+      lineas: reponer.length ? reponer.slice(0, 10).map((p) => `${p.name}: quedan ${Math.max(p.stock, 0)}`) : ['Nada: todo bien de stock'],
+      pendientes: reponer.length,
+      ver: abrir('alerts'),
+    });
+    const vencen = [...k.expiredProducts, ...k.expiringProducts];
+    if (vencen.length) out.push({ titulo: 'Vencidos o por vencer', lineas: vencen.slice(0, 10).map((p) => p.name), pendientes: vencen.length, ver: abrir('alerts') });
+    const fiados = k.sales.filter((x) => x.status === 'completada' && x.paymentMethod === 'Cuenta Corriente (Fiado)' && !x.fiadoPaidAt);
+    if (fiados.length)
+      out.push({
+        titulo: 'Fiados sin cobrar',
+        lineas: [`${formatCurrency(fiados.reduce((a, x) => a + x.total, 0))} en ${fiados.length} ${fiados.length === 1 ? 'venta' : 'ventas'}`],
+        ver: abrir('sales', 'FIADO_PENDIENTE'),
+      });
+    return out;
+  };
+
   const [showCashModal, setShowCashModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
+
+  if (vista === 'calandria') {
+    return (
+      <>
+        <CalandriaHome negocio={`${BRAND.first} ${BRAND.second}`} resumen={resumen} onOpenSystem={() => setVista('sistema')} />
+        <AsistenteKiosco onOpenCash={() => setShowCashModal(true)} antesDeAccion={() => setVista('sistema')} posicion="bottom-5 right-4 sm:right-6" />
+        <CalandriaPanel />
+        <CalandriaLogModal />
+        <CalandriaResultModal />
+        <CalandriaToast />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-indigo-600 selection:text-white">
@@ -32,6 +130,7 @@ const KioskAppContent: React.FC = () => {
       {/* Top Bar Header */}
       <Header 
         onOpenCashModal={() => setShowCashModal(true)} 
+        onGoHome={() => setVista('calandria')}
       />
 
       {/* Aviso de sincronización (antes los errores con la nube no se mostraban) */}
@@ -59,7 +158,7 @@ const KioskAppContent: React.FC = () => {
           />
         )}
         {activeTab === "sales" && (
-          <SalesHistoryScreen />
+          <SalesHistoryScreen key={salesFilter || 'todas'} initialMethod={salesFilter} />
         )}
         {activeTab === "reports" && (
           <ReportsScreen onGoToInventory={() => setActiveTab("inventory")} />
@@ -71,7 +170,7 @@ const KioskAppContent: React.FC = () => {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${cloudEnabled ? (cloudSyncStatus === 'error' ? 'bg-amber-500' : 'bg-emerald-500') : 'bg-slate-400'}`}></span>
-            <span className="font-semibold text-slate-700">KioscoManager Pro</span>
+            <span>una solución de <a href="https://tecnoros-ar.onrender.com" target="_blank" rel="noopener noreferrer" className="font-bold text-slate-700 hover:text-cyan-700">tecnoros.ar</a></span>
             <span className="text-slate-300">•</span>
             <span className="text-slate-500">
               {cloudEnabled
@@ -118,6 +217,13 @@ const KioskAppContent: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* Golondrina */}
+      <CalandriaPanel />
+      <CalandriaLogModal />
+      <CalandriaResultModal />
+      <CalandriaToast />
+      <AsistenteKiosco onOpenCash={() => setShowCashModal(true)} />
 
       {/* MODALS */}
       <CashRegisterModal
@@ -175,7 +281,9 @@ const KioskAppContent: React.FC = () => {
 const App: React.FC<{ userId?: string }> = ({ userId }) => {
   return (
     <KioskProvider userId={userId}>
-      <KioskAppContent />
+      <CalandriaProvider userId={userId} brandName={`${BRAND.first} ${BRAND.second}`}>
+        <KioskAppContent />
+      </CalandriaProvider>
     </KioskProvider>
   );
 };

@@ -15,14 +15,15 @@ import { PrintSalesHistoryModal } from './PrintSalesHistoryModal';
 
 interface SalesHistoryScreenProps {
   onReprintReceipt?: (sale: Sale) => void;
+  initialMethod?: string; // p. ej. 'FIADO_PENDIENTE' cuando se llega desde el informe de la G
 }
 
-export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = () => {
+export const SalesHistoryScreen: React.FC<SalesHistoryScreenProps> = ({ initialMethod }) => {
   const { sales, settleFiado } = useKiosk();
 
   const [search, setSearch] = useState('');
-  const [selectedMethod, setSelectedMethod] = useState<string>('ALL');
-  const [dateFilter, setDateFilter] = useState<'TODAY' | 'YESTERDAY' | 'WEEK' | 'MONTH' | 'ALL'>('ALL');
+  const [selectedMethod, setSelectedMethod] = useState<string>(initialMethod && initialMethod !== 'HOY' ? initialMethod : 'ALL');
+  const [dateFilter, setDateFilter] = useState<'TODAY' | 'YESTERDAY' | 'WEEK' | 'MONTH' | 'ALL'>(initialMethod === 'HOY' ? 'TODAY' : 'ALL');
   const [showClearModal, setShowClearModal] = useState(false);
   const [showPrintModal, setShowPrintModal] = useState(false);
 

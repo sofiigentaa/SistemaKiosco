@@ -23,3 +23,9 @@
 
 ## Demo local
 `npm run dev` sin variables: modo local con datos de ejemplo. `VITE_BRAND=demo` usa una marca ficticia.
+
+## Golondrina
+
+Si el kiosco ya estaba andando, volver a correr `supabase/schema.sql` (se puede
+correr de nuevo sin problema): agrega la tabla del historial de Golondrina.
+Cómo funciona: ver `GOLONDRINA.md`.

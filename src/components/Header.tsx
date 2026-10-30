@@ -72,14 +72,14 @@ export const Header: React.FC<HeaderProps> = ({ onOpenCashModal, onOpenClearModa
               <div className="flex items-center gap-2">
                 <CalandriaBrand onClick={onGoHome} />
 
-                {/* Supabase Cloud Sync Indicator (informational only, no click action) */}
+                {/* PostgreSQL sync indicator (informational only, no click action) */}
                 <span
                   className={`px-2 py-0.5 border text-[10px] font-bold rounded-full uppercase flex items-center gap-1 select-none ${
                     cloudEnabled
                       ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300 ring-1 ring-emerald-500/30'
                       : 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300'
                   }`}
-                  title={cloudEnabled ? `Sincronizado con Supabase (${cloudSyncStatus === 'syncing' ? 'sincronizando…' : 'al día'})` : 'Sincronización en la nube desactivada'}
+                  title={cloudEnabled ? `Sincronizado con PostgreSQL (${cloudSyncStatus === 'syncing' ? 'sincronizando…' : 'al día'})` : 'Sincronización en la nube desactivada'}
                 >
                   {cloudEnabled ? (
                     <Cloud className="w-3 h-3 text-emerald-400" />

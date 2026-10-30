@@ -34,8 +34,8 @@ Cada línea lleva la huella SHA-256 de la anterior, y así quedan encadenadas:
 `sha256(numero|fecha|tipo|accion|cantidad|minutos|huella_anterior)`.
 Si alguien cambia o borra una línea del medio, la verificación lo marca.
 
-- En la nube (Supabase), la base pone el número, la fecha y la huella, y **no deja
-  modificar ni borrar** líneas (tabla `kiosk_calandria_log` en `supabase/schema.sql`).
+- En PostgreSQL, el servidor pone el número, la fecha y la huella, y la aplicación
+  no ofrece operaciones para modificar ni borrar líneas (tabla `kiosk_calandria_log`).
 - Sin internet, la acción queda "pendiente de sellar" en el equipo y se sube sola.
 - El registro se ve en pantalla (con la verificación). Para una auditoría,
   tecnoros.ar lo saca directo de la base de datos; el cliente no tiene que hacer nada.

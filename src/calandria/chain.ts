@@ -7,7 +7,7 @@
 // Cada línea guarda la "huella" (SHA-256) de la línea anterior. Si alguien
 // borra o cambia una línea del medio, las huellas dejan de coincidir y la
 // verificación lo muestra. En la nube la huella la calcula la base de datos
-// (supabase/schema.sql) con la misma fórmula que está acá.
+// (server/index.js) con la misma fórmula que está acá.
 
 export type CalandriaKind = 'reposicion' | 'ingreso_habitual' | 'liquidacion' | 'fiados' | 'sistema';
 export type CalandriaAction = 'aprobada' | 'descartada' | 'pausa' | 'reanudada';

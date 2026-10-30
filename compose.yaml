@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sistema-kiosco-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: kiosco
+      POSTGRES_USER: kiosco
+      POSTGRES_PASSWORD: kiosco_local_dev
+    ports:
+      - "127.0.0.1:15432:5432"
+    volumes:
+      - kiosco-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kiosco -d kiosco"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  kiosco-postgres-data:

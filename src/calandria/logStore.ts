@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabase';
+import { apiRequest } from '../lib/api';
 import { CalandriaAction, CalandriaKind, LogEntry, sealEntry } from './chain';
 
 // Dónde vive el registro sellado:
@@ -62,14 +62,12 @@ export function queuePending(userId: string | undefined, data: Omit<PendingActio
 }
 
 export async function fetchCloudLog(): Promise<{ ok: boolean; entries?: LogEntry[] }> {
-  if (!supabase) return { ok: false };
-  const { data, error } = await supabase
-    .from('kiosk_calandria_log')
-    .select('seq, at, kind, action, qty, minutes, prev_hash, hash')
-    .order('seq', { ascending: true })
-    .limit(10000);
-  if (error) return { ok: false };
-  return { ok: true, entries: (data || []) as LogEntry[] };
+  try {
+    const result = await apiRequest<{ entries: LogEntry[] }>('/api/calandria/log');
+    return { ok: true, entries: result.entries };
+  } catch {
+    return { ok: false };
+  }
 }
 
 // Sube en orden lo pendiente. Lo que se subió sale de la cola.
@@ -82,15 +80,18 @@ export function flushPending(userId: string): Promise<boolean> {
 }
 
 async function doFlush(userId: string): Promise<boolean> {
-  if (!supabase) return false;
   for (;;) {
     const queue = readPending(userId);
     if (queue.length === 0) return true;
     const p = queue[0];
-    const { error } = await supabase
-      .from('kiosk_calandria_log')
-      .insert({ kind: p.kind, action: p.action, qty: p.qty, minutes: p.minutes });
-    if (error) return false;
+    try {
+      await apiRequest('/api/calandria/log', {
+        method: 'POST',
+        body: JSON.stringify({ kind: p.kind, action: p.action, qty: p.qty, minutes: p.minutes }),
+      });
+    } catch {
+      return false;
+    }
     write(pendingKey(userId), readPending(userId).filter((x) => x.localId !== p.localId));
   }
 }

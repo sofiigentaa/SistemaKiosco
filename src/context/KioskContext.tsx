@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { Product, Sale, CartItem, SaleItem, StockMovement, CashRegisterShift, PaymentMethod } from '../types';
 import { INITIAL_PRODUCTS, generateSampleSales, generateSampleMovements, INITIAL_SHIFTS, INITIAL_CATEGORIES } from '../data/initialData';
 import { getDaysUntil, playSuccessBeep } from '../utils/formatters';
-import { isSupabaseConfigured } from '../lib/supabase';
-import { fetchCloudState, pushChanges, subscribeCloudChanges, makeSnapshot, KioskCloudState, Snapshot, RemoteChange } from '../lib/supabaseSync';
+import { isApiConfigured } from '../lib/api';
+import { fetchCloudState, pushChanges, subscribeCloudChanges, makeSnapshot, KioskCloudState, Snapshot, RemoteChange } from '../lib/postgresSync';
 
 interface KioskContextType {
   products: Product[];
@@ -48,7 +48,7 @@ interface KioskContextType {
   addCategory: (categoryName: string) => void;
   deleteCategory: (categoryName: string) => void;
   
-  // Cloud sync (Supabase)
+  // PostgreSQL sync through the backend API
   cloudEnabled: boolean;
   cloudSyncStatus: 'synced' | 'syncing' | 'local' | 'error';
   cloudError: string | null;
@@ -98,7 +98,7 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
   const [activeTab, setActiveTab] = useState<'pos' | 'inventory' | 'alerts' | 'sales' | 'reports' | 'cash'>('pos');
   const [searchFilter, setSearchFilter] = useState('');
 
-  const cloud = isSupabaseConfigured && Boolean(userId);
+  const cloud = isApiConfigured && Boolean(userId);
   // En modo nube cada cuenta tiene su propia copia local (para seguir vendiendo
   // sin internet) y nunca arranca con datos de ejemplo.
   const key = (name: string) => (cloud ? `${name}_${userId}` : name);
@@ -731,52 +731,74 @@ export const KioskProvider: React.FC<{ children: React.ReactNode; userId?: strin
   };
 
   const resetData = () => {
-    productsRef.current = INITIAL_PRODUCTS;
-    setProducts(INITIAL_PRODUCTS);
-    setSales(generateSampleSales());
-    setStockMovements(generateSampleMovements());
-    setCurrentShift(INITIAL_SHIFTS[0]);
+    const nextProducts = INITIAL_PRODUCTS;
+    const nextSales = generateSampleSales();
+    const nextMovements = generateSampleMovements();
+    const nextShift = INITIAL_SHIFTS[0];
+
+    productsRef.current = nextProducts;
+    salesRef.current = nextSales;
+    movementsRef.current = nextMovements;
+    shiftRef.current = nextShift;
+
+    setProducts(nextProducts);
+    setSales(nextSales);
+    setStockMovements(nextMovements);
+    setCurrentShift(nextShift);
     setClosedShifts([]);
   };
 
   const clearAllData = () => {
-    setProducts([]);
-    setSales([]);
-    setStockMovements([]);
     const freshShift: CashRegisterShift = {
       id: `shift-${Date.now()}`,
       openedAt: new Date().toISOString(),
       initialCash: 0,
       isOpen: false,
     };
+
+    productsRef.current = [];
+    salesRef.current = [];
+    movementsRef.current = [];
+    shiftRef.current = freshShift;
+
+    setProducts([]);
+    setSales([]);
+    setStockMovements([]);
     setCurrentShift(freshShift);
     setClosedShifts([]);
   };
 
   const clearSalesHistory = () => {
+    salesRef.current = [];
+    movementsRef.current = [];
     setSales([]);
     setStockMovements([]);
   };
 
   const clearAllProducts = () => {
+    productsRef.current = [];
+    movementsRef.current = [];
     setProducts([]);
     setStockMovements([]);
   };
 
   const resetInventoryStock = () => {
-    const zeroStock = products.map((p) => ({
+    const zeroStock = productsRef.current.map((p) => ({
       ...p,
       stock: 0,
       updatedAt: new Date().toISOString(),
     }));
+    productsRef.current = zeroStock;
     setProducts(zeroStock);
   };
 
   const importData = (imported: { products?: Product[]; sales?: Sale[] }) => {
     if (imported.products && Array.isArray(imported.products)) {
+      productsRef.current = imported.products;
       setProducts(imported.products);
     }
     if (imported.sales && Array.isArray(imported.sales)) {
+      salesRef.current = imported.sales;
       setSales(imported.sales);
     }
     // Local-only: state updates are persisted to localStorage by the effects above.

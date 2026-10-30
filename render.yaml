@@ -1,35 +1,31 @@
-# Despliegue en Render como sitio estático (gratis). Datos, login y tiempo real
-# viven en Supabase. Render → New → Blueprint → elegir este repo.
+# API Node y PostgreSQL privado en Render. Render → New → Blueprint → este repo.
 services:
   - type: web
     name: sistema-kiosco
-    runtime: static
+    runtime: node
     branch: main
     buildCommand: npm ci && npm run build
-    staticPublishPath: ./dist
+    startCommand: npm start
     autoDeploy: true
     pullRequestPreviewsEnabled: false
-    headers:
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /*
-        name: Referrer-Policy
-        value: same-origin
-      # La cámara se usa para escanear códigos de barras.
-      - path: /*
-        name: Permissions-Policy
-        value: camera=(self), microphone=(), geolocation=()
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
     envVars:
-      # Supabase → Project Settings → API. La clave "anon" es pública por
-      # diseño; lo que protege los datos es el login + RLS (supabase/schema.sql).
-      - key: VITE_SUPABASE_URL
+      - key: DATABASE_URL
         sync: false
-      - key: VITE_SUPABASE_ANON_KEY
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
         sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SMTP_HOST
+        value: ""
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        value: ""
+      - key: SMTP_PASSWORD
+        value: ""
+      - key: SMTP_FROM
+        value: ""
       - key: VITE_BRAND
         value: ""

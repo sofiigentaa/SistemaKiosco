@@ -9,7 +9,7 @@ import { ReportsScreen } from "./components/Reports/ReportsScreen";
 import { CashRegisterModal } from "./components/CashRegister/CashRegisterModal";
 import { ClearDataModal } from "./components/Common/ClearDataModal";
 import { RotateCcw, Trash2, LogOut, AlertTriangle } from "lucide-react";
-import { signOut } from "./lib/supabase";
+import { signOut } from "./lib/api";
 import { CalandriaProvider } from "./calandria/CalandriaContext";
 import { CalandriaPanel, CalandriaLogModal, CalandriaResultModal, CalandriaToast } from "./calandria/CalandriaUI";
 import { CalandriaHome, ResumenSeccion } from "./calandria/CalandriaHome";

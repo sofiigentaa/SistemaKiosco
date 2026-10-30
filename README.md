@@ -1,4 +1,4 @@
-Gestión integral de kiosco/almacén: punto de venta, control de inventario y vencimientos con liquidación automática, arqueo de caja, historial de ventas y reportes de márgenes. Sincronización en tiempo real entre dispositivos con Supabase. Hecho con React, TypeScript, Vite y Tailwind — desarrollado inicialmente con Google AI Studio y refinado con Claude (Anthropic).
+Gestión integral de kiosco/almacén: punto de venta, control de inventario y vencimientos con liquidación automática, arqueo de caja, historial de ventas y reportes de márgenes. Sincronización entre dispositivos mediante una API propia y PostgreSQL en Render. Hecho con React, TypeScript, Vite y Tailwind.
 
 # Sistema de Gestión — Granja y Kiosco Don Ramón
 
@@ -10,7 +10,7 @@ Este documento describe, de forma simple y en lenguaje claro, qué hace el siste
 
 Es un sistema de gestión pensado para un kiosco o almacén. Permite vender de forma rápida, controlar el stock de mercadería, saber cuándo un producto está por vencerse, cerrar la caja al final del día y ver reportes de cómo va el negocio.
 
-El sistema funciona desde el navegador (no hay que instalar nada) y puede usarse desde una computadora, tablet o celular. Si se usa en más de un dispositivo al mismo tiempo (por ejemplo, la caja y una tablet en el depósito), la información se actualiza automáticamente en todos: si se vende un producto en uno, el stock se descuenta en todos los demás al instante.
+El sistema funciona desde el navegador (no hay que instalar nada) y puede usarse desde una computadora, tablet o celular. Si se usa en más de un dispositivo al mismo tiempo (por ejemplo, la caja y una tablet en el depósito), la información se sincroniza automáticamente en pocos segundos.
 
 ## 2. Funciones principales
 

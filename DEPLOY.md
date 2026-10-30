@@ -1,31 +1,39 @@
-# Cómo publicar el Sistema Kiosco en Render con Supabase
+# PostgreSQL en Render
 
-## 1. Supabase
-1. Usar el proyecto que ya existe o crear uno en https://supabase.com (región São Paulo).
-2. **SQL Editor → New query**: pegar `supabase/schema.sql` → **Run**. Crea las tablas nuevas,
-   las políticas RLS, la función que suma el stock y activa el tiempo real.
-   Además **cierra la tabla vieja `kiosk_state`**, cuya clave quedó publicada en GitHub.
-3. **Authentication → Providers → Email**: desactivar "Allow new users to sign up".
-4. **Authentication → Users → Add user**: crear la cuenta del kiosco (email + contraseña).
-   Todos los equipos del negocio (caja, tablet, celular) entran con esa misma cuenta.
-5. Si había datos en la versión anterior: en `supabase/schema.sql` está comentado el bloque
-   para pasarlos a la cuenta (reemplazar el email y correrlo una vez).
-6. **Project Settings → API**: copiar *Project URL* y la clave *anon public*.
+El proyecto usa la base PostgreSQL que ya creaste. No crea una segunda instancia. El navegador
+se conecta a la API Node; la URL de PostgreSQL nunca se envía al navegador.
 
-## 2. Render
-1. **New → Blueprint** → este repositorio (sitio estático, gratis).
-2. Cargar `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` → **Apply**.
+## Conectar la base existente
+1. En Render, abrí el servicio web `sistema-kiosco` → **Environment**.
+2. Configurá `DATABASE_URL` con la **Internal Database URL** de tu base Render. No uses la URL
+   externa para el servicio web; la externa es solo para conexiones desde tu computadora.
+3. Configurá `ADMIN_EMAIL` y `ADMIN_PASSWORD` para la cuenta del kiosco. `JWT_SECRET` se genera
+   automáticamente con el Blueprint.
+4. Guardá y desplegá. Al iniciar, el backend ejecuta `server/schema.sql` y crea las tablas que
+   falten. También podés aplicar el esquema manualmente con `npm run db:apply` desde `.env`.
 
-## Cómo sincroniza
-- Cada venta, producto y movimiento es una fila propia: dos equipos vendiendo a la vez no se pisan.
-- El stock se descuenta en la base sumando las diferencias (vendo 2 acá y 3 allá = −5).
-- Sin internet se sigue vendiendo; al volver la conexión se sube lo pendiente.
+La URL externa que se compartió antes debe rotarse antes de usarla. Para ejecutar `db:apply` desde
+tu computadora, poné la nueva **External Database URL** en `DATABASE_URL` de `.env`. Render puede
+requerir habilitar temporalmente tu IP en la lista de acceso de la base.
 
-## Demo local
-`npm run dev` sin variables: modo local con datos de ejemplo. `VITE_BRAND=demo` usa una marca ficticia.
+## Desarrollo local
+Copiar `.env.example` a `.env`, iniciar PostgreSQL local con `docker compose up -d` y ejecutar
+`npm run dev:api` y `npm run dev` en terminales separadas. Vite envía `/api` al backend en el
+puerto 3001.
 
-## Golondrina
+## Datos y sincronización
+- PostgreSQL guarda los datos por cuenta y las operaciones de sincronización son transaccionales.
+- Las ventas y movimientos se agregan de forma idempotente; el stock se aplica como diferencia.
+- Los equipos consultan cambios cada cinco segundos y guardan cambios offline para reintentarlos.
+- El login usa cookie `HttpOnly`, `SameSite=Lax` y expiración de 12 horas.
+- El registro de Golondrina se almacena en la misma base PostgreSQL.
 
-Si el kiosco ya estaba andando, volver a correr `supabase/schema.sql` (se puede
-correr de nuevo sin problema): agrega la tabla del historial de Golondrina.
-Cómo funciona: ver `GOLONDRINA.md`.
+## Registro y recuperación de contraseña
+El registro está habilitado y las contraseñas requieren al menos 12 caracteres. Para enviar
+enlaces de recuperación, configurá `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` y `SMTP_PASSWORD`
+como variables privadas en Render. `SMTP_FROM` es opcional; por defecto se usa `SMTP_USER`.
+El enlace vence a los 30 minutos, solo puede utilizarse una vez y restablecer la contraseña
+cierra las sesiones anteriores. Sin SMTP configurado, el registro y el ingreso funcionan, pero
+la pantalla de recuperación informa que el envío de correo no está disponible.
+
+`VITE_BRAND=demo` usa una marca ficticia.

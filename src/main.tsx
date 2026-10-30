@@ -1,19 +1,16 @@
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { Session } from '@supabase/supabase-js';
 import App from './App.tsx';
 import { LoginScreen } from './components/Common/LoginScreen';
-import { getSession, isSupabaseConfigured, onSessionChange } from './lib/supabase';
+import { ApiSession, getSession, isApiConfigured, onSessionChange } from './lib/api';
 import './index.css';
 
-// Con Supabase configurado, nadie ve el kiosco sin iniciar sesión.
-// Sin Supabase, funciona en modo local (demo en el navegador).
 function AuthGate() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [session, setSession] = useState<ApiSession | null>(null);
+  const [loading, setLoading] = useState(isApiConfigured);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isApiConfigured) return;
     getSession().then((s) => {
       setSession(s);
       setLoading(false);
@@ -21,7 +18,8 @@ function AuthGate() {
     return onSessionChange(setSession);
   }, []);
 
-  if (!isSupabaseConfigured) return <App />;
+  if (!isApiConfigured) return <App />;
+  if (new URLSearchParams(window.location.search).has('reset')) return <LoginScreen />;
   if (loading) return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-sm text-slate-400">Cargando…</div>;
   return session ? <App key={session.user.id} userId={session.user.id} /> : <LoginScreen />;
 }

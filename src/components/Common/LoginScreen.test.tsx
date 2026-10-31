@@ -12,7 +12,7 @@ vi.mock('../../lib/api', () => ({
 
 describe('LoginScreen account flows', () => {
   beforeEach(() => {
-    vi.mocked(registerAccount).mockResolvedValue(null);
+    vi.mocked(registerAccount).mockResolvedValue({ message: 'Cuenta creada correctamente.' });
     vi.mocked(requestPasswordReset).mockResolvedValue({ message: 'Si el email está registrado, recibirás un enlace.' });
     vi.mocked(resetPassword).mockResolvedValue(null);
     vi.mocked(signIn).mockResolvedValue(null);
@@ -50,7 +50,7 @@ describe('LoginScreen account flows', () => {
     fireEvent.change(screen.getByLabelText('Repetir contraseña nueva'), { target: { value: 'otra-clave-segura-456' } });
     fireEvent.submit(screen.getByTestId('login-form'));
 
-    await waitFor(() => expect(resetPassword).toHaveBeenCalledWith('single-use-token', 'otra-clave-segura-456'));
+    await waitFor(() => expect(resetPassword).toHaveBeenCalledWith('otra-clave-segura-456'));
     expect(await screen.findByRole('status')).toHaveTextContent('Contraseña actualizada');
   });
 });

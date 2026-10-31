@@ -1,11 +1,10 @@
 import 'dotenv/config';
-import bcrypt from 'bcryptjs';
 import 'express-async-errors';
 import express from 'express';
-import nodemailer from 'nodemailer';
+import { createClient } from '@supabase/supabase-js';
 import { rateLimit } from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,6 +18,11 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: databaseUrl.hostname.endsWith('.render.com') ? { rejectUnauthorized: false } : false,
 });
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey, { auth: { persistSession: false, autoRefreshToken: false } })
+  : null;
 
 app.disable('x-powered-by');
 app.use((req, res, next) => {
@@ -29,19 +33,13 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: '10mb' }));
 
-const required = ['DATABASE_URL', 'JWT_SECRET', 'ADMIN_EMAIL', 'ADMIN_PASSWORD'];
+const required = ['DATABASE_URL', 'JWT_SECRET'];
 for (const name of required) {
   if (!process.env[name]) throw new Error(`Falta configurar ${name}.`);
 }
 
 async function initialize() {
   await pool.query(await readFile(path.join(directory, 'schema.sql'), 'utf8'));
-  const passwordHash = await bcrypt.hash(process.env.ADMIN_PASSWORD, 12);
-  await pool.query(
-    `INSERT INTO kiosk_users (email, password_hash) VALUES ($1, $2)
-     ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash`,
-    [process.env.ADMIN_EMAIL.trim().toLowerCase(), passwordHash]
-  );
 }
 
 function authenticate(req, res, next) {
@@ -67,10 +65,7 @@ function validArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: 'draft-8', legacyHeaders: false });
-const registrationLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false });
-const recoveryLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: 'draft-8', legacyHeaders: false });
+const exchangeLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: 'draft-8', legacyHeaders: false });
 
 function setSessionCookie(res, user) {
   const token = jwt.sign(
@@ -82,117 +77,44 @@ function setSessionCookie(res, user) {
   res.setHeader('Set-Cookie', `kiosk_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200${secure}`);
 }
 
-function validPassword(password) {
-  return typeof password === 'string' && password.length >= 12 && password.length <= 200;
-}
+app.post('/api/auth/exchange', exchangeLimiter, async (req, res) => {
+  if (!supabase) return res.status(503).json({ error: 'Supabase Auth no está configurado en el servidor.' });
+  const accessToken = String(req.body?.accessToken || '');
+  if (!accessToken || accessToken.length > 10000) return res.status(401).json({ error: 'Sesión de Supabase inválida.' });
 
-function createMailer() {
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD } = process.env;
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASSWORD) return null;
-  const port = Number(SMTP_PORT);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) return null;
-  return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port,
-    secure: port === 465,
-    auth: { user: SMTP_USER, pass: SMTP_PASSWORD },
-  });
-}
+  const { data, error } = await supabase.auth.getUser(accessToken);
+  const identity = data?.user;
+  const email = identity?.email?.trim().toLowerCase();
+  if (error || !identity?.id || !email) return res.status(401).json({ error: 'Sesión de Supabase inválida.' });
 
-app.post('/api/auth/register', registrationLimiter, async (req, res) => {
-  const email = String(req.body?.email || '').trim().toLowerCase();
-  const password = req.body?.password;
-  if (email.length > 254 || !emailPattern.test(email)) return res.status(400).json({ error: 'Ingresá un email válido.' });
-  if (!validPassword(password)) return res.status(400).json({ error: 'La contraseña debe tener entre 12 y 200 caracteres.' });
-
-  const passwordHash = await bcrypt.hash(password, 12);
-  try {
-    const { rows } = await pool.query(
-      'INSERT INTO kiosk_users (email, password_hash) VALUES ($1, $2) RETURNING id, email, session_version',
-      [email, passwordHash]
-    );
-    setSessionCookie(res, rows[0]);
-    res.status(201).json({ user: { id: rows[0].id, email: rows[0].email } });
-  } catch (error) {
-    if (error.code === '23505') return res.status(409).json({ error: 'No se pudo crear la cuenta. Revisá si ese email ya está registrado.' });
-    throw error;
-  }
-});
-
-app.post('/api/auth/login', loginLimiter, async (req, res) => {
-  const email = String(req.body?.email || '').trim().toLowerCase();
-  const password = String(req.body?.password || '');
-  const { rows } = await pool.query('SELECT id, email, password_hash, session_version FROM kiosk_users WHERE email = $1', [email]);
-  const user = rows[0];
-  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-    return res.status(401).json({ error: 'Email o contraseña incorrectos.' });
-  }
-  setSessionCookie(res, user);
-  res.json({ user: { id: user.id, email: user.email } });
-});
-
-app.post('/api/auth/password/forgot', recoveryLimiter, async (req, res) => {
-  const mailer = createMailer();
-  if (!mailer) return res.status(503).json({ error: 'La recuperación por email todavía no está configurada.' });
-  const email = String(req.body?.email || '').trim().toLowerCase();
-  if (email.length > 254 || !emailPattern.test(email)) return res.status(400).json({ error: 'Ingresá un email válido.' });
-
-  const { rows } = await pool.query('SELECT id, email FROM kiosk_users WHERE email = $1', [email]);
-  if (rows[0]) {
-    const token = randomBytes(32).toString('base64url');
-    const tokenHash = createHash('sha256').update(token).digest('hex');
-    await pool.query('DELETE FROM kiosk_password_reset_tokens WHERE user_id = $1 AND used_at IS NULL', [rows[0].id]);
-    await pool.query(
-      'INSERT INTO kiosk_password_reset_tokens (token_hash, user_id, expires_at) VALUES ($1, $2, now() + interval \'30 minutes\')',
-      [tokenHash, rows[0].id]
-    );
-    const appUrl = (process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:3000').replace(/\/$/, '');
-    const resetUrl = `${appUrl}/?reset=${encodeURIComponent(token)}`;
-    try {
-      await mailer.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER,
-        to: rows[0].email,
-        subject: 'Restablecer contraseña del Sistema Kiosco',
-        text: `Para elegir una contraseña nueva, abrí este enlace (vence en 30 minutos): ${resetUrl}`,
-        html: `<p>Recibimos un pedido para restablecer tu contraseña.</p><p><a href="${resetUrl}">Crear una contraseña nueva</a></p><p>El enlace vence en 30 minutos. Si no pediste este cambio, ignorá este email.</p>`,
-      });
-    } catch {
-      await pool.query('DELETE FROM kiosk_password_reset_tokens WHERE token_hash = $1', [tokenHash]);
-      return res.status(503).json({ error: 'No se pudo enviar el email de recuperación. Revisá la configuración de correo.' });
-    }
-  }
-  res.json({ message: 'Si el email está registrado, recibirás un enlace para restablecer la contraseña.' });
-});
-
-app.post('/api/auth/password/reset', async (req, res) => {
-  const token = String(req.body?.token || '');
-  const password = req.body?.password;
-  if (!token || token.length > 200) return res.status(400).json({ error: 'El enlace no es válido o venció.' });
-  if (!validPassword(password)) return res.status(400).json({ error: 'La contraseña debe tener entre 12 y 200 caracteres.' });
-
-  const tokenHash = createHash('sha256').update(token).digest('hex');
-  const passwordHash = await bcrypt.hash(password, 12);
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const { rows } = await client.query(
-      `SELECT user_id FROM kiosk_password_reset_tokens
-       WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now() FOR UPDATE`,
-      [tokenHash]
+      `SELECT id, email, session_version FROM kiosk_users
+       WHERE auth_subject = $1 OR lower(email) = $2
+       ORDER BY (auth_subject = $1) DESC NULLS LAST LIMIT 1 FOR UPDATE`,
+      [identity.id, email]
     );
-    if (!rows[0]) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ error: 'El enlace no es válido o venció.' });
+    let user = rows[0];
+    if (user) {
+      const { rows: updated } = await client.query(
+        `UPDATE kiosk_users SET auth_subject = $1, email = $2
+         WHERE id = $3 RETURNING id, email, session_version`,
+        [identity.id, email, user.id]
+      );
+      user = updated[0];
+    } else {
+      const { rows: inserted } = await client.query(
+        `INSERT INTO kiosk_users (id, auth_subject, email, password_hash)
+         VALUES ($1, $1, $2, NULL) RETURNING id, email, session_version`,
+        [identity.id, email]
+      );
+      user = inserted[0];
     }
-    await client.query(
-      'UPDATE kiosk_users SET password_hash = $1, session_version = session_version + 1 WHERE id = $2',
-      [passwordHash, rows[0].user_id]
-    );
-    await client.query('UPDATE kiosk_password_reset_tokens SET used_at = now() WHERE user_id = $1 AND used_at IS NULL', [rows[0].user_id]);
     await client.query('COMMIT');
-    const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-    res.setHeader('Set-Cookie', `kiosk_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure}`);
-    res.json({ message: 'Contraseña actualizada. Ya podés ingresar.' });
+    setSessionCookie(res, user);
+    res.json({ user: { id: user.id, email: user.email } });
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;

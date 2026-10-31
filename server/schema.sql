@@ -4,11 +4,15 @@ CREATE TABLE IF NOT EXISTS kiosk_users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
+  auth_subject UUID UNIQUE,
   session_version INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 ALTER TABLE kiosk_users ADD COLUMN IF NOT EXISTS session_version INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE kiosk_users ADD COLUMN IF NOT EXISTS auth_subject UUID;
+ALTER TABLE kiosk_users ALTER COLUMN password_hash DROP NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS kiosk_users_auth_subject_idx ON kiosk_users (auth_subject) WHERE auth_subject IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS kiosk_password_reset_tokens (
   token_hash TEXT PRIMARY KEY,

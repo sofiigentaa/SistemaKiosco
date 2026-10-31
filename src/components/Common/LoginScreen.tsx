@@ -33,8 +33,9 @@ export const LoginScreen: React.FC = () => {
       const err = await signIn(email, password);
       if (err) setError(err);
     } else if (mode === 'register') {
-      const err = await registerAccount(email, password);
-      if (err) setError(err);
+      const result = await registerAccount(email, password);
+      if (result.error) setError(result.error);
+      else if (result.message) setNotice(result.message);
     } else if (mode === 'forgot') {
       const result = await requestPasswordReset(email);
       if (result.error) setError(result.error);
@@ -45,7 +46,7 @@ export const LoginScreen: React.FC = () => {
       } else if (password !== confirmPassword) {
         setError('Las contraseñas no coinciden.');
       } else {
-        const err = await resetPassword(resetToken, password);
+        const err = await resetPassword(password);
         if (err) setError(err);
         else {
           window.history.replaceState({}, '', window.location.pathname);

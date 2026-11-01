@@ -14,8 +14,8 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: VITE_SUPABASE_URL
-        sync: false
+        value: https://emhsahxspwgfnyvhulco.supabase.co
       - key: VITE_SUPABASE_ANON_KEY
-        sync: false
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtaHNhaHhzcHdnZm55dmh1bGNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0NzA4MjUsImV4cCI6MjEwOTA0NjgyNX0.cpBPgkDttjaRjToWLLTdLdF3bKERD5X8KwySRs5_MqQ
       - key: VITE_BRAND
         value: ""
